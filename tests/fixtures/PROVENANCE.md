@@ -2,7 +2,7 @@
 
 2026-10-08、MazeProofのローカル検証作業で新規に作成。
 MazeMa商品、Slack添付、第三者repoのコード/画像は使用していない。
-ライセンスと公開利用許諾はプロジェクトとともに選定保留。新しいLICENSEは付与しない。
+本人のMIT採用指示により、これら独立合成fixtureにもrepo rootの [MIT License](../../LICENSE) を適用する。
 
 - `unique-2x2.json`: 手で構成した2×2格子。通路辺 (0,1),(1,3)、入口(0,0,N)、出口(1,1,S)、解答0→1→3。セル2は孤立。入口出口間はuniqueだが全域木ではない。
 - `unique-2x2.result.json`: 上記のexact_structure結果。requestIdのみ省略したgolden。checkedはreachability/uniqueness/routeValidity、mazeIdentity/renderedAgreementはNOT_RUN。更新時は意味の変更をレビューする。

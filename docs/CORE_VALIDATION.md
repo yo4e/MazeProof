@@ -37,4 +37,4 @@ Markdown内部リンク、git diff --checkも成功。macOSの既定cacheへの�
 
 画像/PDF認識、human confirmation、UI/CLI/MCP、renderedAgreement、transport/fileアクセス制限、workerによる強制timeout/メモリ制限、配布は未実装。画像入力はUNSUPPORTEDであり、構造PASSを完成品PASSとして使えない。
 結果schemaは構造コアに対応するローカル契約。NEEDS_REVIEWは総合statusとして予約するが、認識adapterのフィールドはまだ固定していない。
-ライセンス、fixtureの公開利用許諾、UI/配布方式、画像品質校正は保留。[ADR](adr/0001-structure-core.md)の人間ゲートを次のレビューで確認する。
+この検証当時はライセンスとfixture許諾も保留だったが、本人の追加指示によりMITに決定済み（[現行判断](DECISIONS.md)）。UI/配布方式、画像品質校正は保留。[ADR](adr/0001-structure-core.md)の人間ゲートを次のレビューで確認する。

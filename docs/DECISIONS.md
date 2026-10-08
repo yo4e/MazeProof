@@ -2,12 +2,12 @@
 
 ## 固定した方向
 
-ローカルで独立検証、共通コア、構造JSONを厳密基準、完成品も検査、認識と証明を分離、画像確認ゲート、synthetic 公開 fixture。初回仕様策定では実装・依存導入・公開設定変更を対象外とした。2026-10-08の構造コア実装判断は [ADR 0001](adr/0001-structure-core.md) に記録。公開設定・ライセンスは変更しない。
+ローカルで独立検証、共通コア、構造JSONを厳密基準、完成品も検査、認識と証明を分離、画像確認ゲート、synthetic 公開 fixture。初回仕様策定では実装・依存導入・公開設定変更を対象外とした。2026-10-08の構造コア実装判断は [ADR 0001](adr/0001-structure-core.md) に記録。公開設定は変更しない。
 2026-10-07 の調査時点で repo は空。README/AGENTS/関連する repo-local SKILL は存在しなかった。PR 比較用に内容なしの main 初期コミットを作成し、仕様は PR でレビューする。
 
-## MazeProof 自体のライセンスは選定保留
+## MazeProof 自体のライセンスは MIT
 
-依頼者の方針により、MazeProof 自体のライセンスは引き続き検討する。MIT 採用は決定しておらず、今回 LICENSE ファイルは追加しない。以下の MIT/Unlicense は依存候補の現行条件を記録したもので、MazeProof のライセンス選択を意味しない。仕様 PR のマージ承認は、ライセンス採用や実装開始の承認とは別である。
+本人の追加指示により MIT を採用し、repo root の [LICENSE](../LICENSE) に標準本文と著作権表示（2026 yo4e）を置く。MazeProof のオリジナルコード・文書・独立合成fixtureに適用する。以前の選定保留を更新した判断であり、依存候補の採用とは別である。READMEのKo-fi支援案内は任意。配布・release・権限変更は今回行わない。
 
 ## 未決と決める時期
 
@@ -20,7 +20,7 @@
 | 認識品質 | 最小壁幅、格子推定、しきい値、JPEG品質、角度、確認文言。自動PASSは初期導入しない | 段階2 |
 | 上限 | SPECの初期案を実測し、decode/render前の制限とworker強制終了を確認 | 各adapter導入前 |
 | PDF engine | PDFium系/Poppler等のlicense、バイナリ配布、sandbox、vector extractionの実装費を比較。MuPDF系を含め選定前に条件確認 | 段階4前 |
-| 公開license | MazeProof自身とfixtureのlicense、依存notice、商標/name確認 | 公開候補前 |
+| 公開準備 | MazeProof自身とfixtureはMITに決定。将来の依存noticeと商標/name確認は未決 | 公開候補前 |
 | 自動確認 | supported profileで自動承認を将来許すかは別ADR。現時点は画像認識モデルの人間確認が必要 | MVP後 |
 
 ## OSS 候補（採用未決、未動作検証）
