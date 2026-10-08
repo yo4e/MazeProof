@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MazeProof exact structure result v1 (local)",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": "mazeproof.result/1"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "engineVersion": {
+      "type": "string"
+    },
+    "inputDigests": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "problem": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "solution": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "pagePairs": {
+      "type": "array"
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "unique_required"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "unique_required": {
+          "type": "boolean"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": [
+        "maxBytes",
+        "maxDimension",
+        "maxSeconds"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxDimension": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxSeconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "transforms": {
+      "type": "array"
+    },
+    "recognition": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "NOT_APPLICABLE"
+        },
+        "assurance": {
+          "const": "exact_structure"
+        }
+      },
+      "required": [
+        "status",
+        "assurance"
+      ],
+      "additionalProperties": false
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "reachability": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_RUN"
+              ]
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1
+            },
+            "coordinates": {
+              "type": [
+                "object",
+                "array",
+                "null"
+              ]
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "problem",
+                  "solution"
+                ]
+              }
+            },
+            "assurance": {
+              "enum": [
+                "exact_structure",
+                "recognized_unconfirmed",
+                "human_confirmed"
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "reasonCode",
+            "coordinates",
+            "sources",
+            "assurance"
+          ]
+        },
+        "uniqueness": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_RUN"
+              ]
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1
+            },
+            "coordinates": {
+              "type": [
+                "object",
+                "array",
+                "null"
+              ]
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "problem",
+                  "solution"
+                ]
+              }
+            },
+            "assurance": {
+              "enum": [
+                "exact_structure",
+                "recognized_unconfirmed",
+                "human_confirmed"
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "reasonCode",
+            "coordinates",
+            "sources",
+            "assurance"
+          ]
+        },
+        "routeValidity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_RUN"
+              ]
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1
+            },
+            "coordinates": {
+              "type": [
+                "object",
+                "array",
+                "null"
+              ]
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "problem",
+                  "solution"
+                ]
+              }
+            },
+            "assurance": {
+              "enum": [
+                "exact_structure",
+                "recognized_unconfirmed",
+                "human_confirmed"
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "reasonCode",
+            "coordinates",
+            "sources",
+            "assurance"
+          ]
+        },
+        "mazeIdentity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_RUN"
+              ]
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1
+            },
+            "coordinates": {
+              "type": [
+                "object",
+                "array",
+                "null"
+              ]
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "problem",
+                  "solution"
+                ]
+              }
+            },
+            "assurance": {
+              "enum": [
+                "exact_structure",
+                "recognized_unconfirmed",
+                "human_confirmed"
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "reasonCode",
+            "coordinates",
+            "sources",
+            "assurance"
+          ]
+        },
+        "renderedAgreement": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "PASS",
+                "FAIL",
+                "NOT_RUN"
+              ]
+            },
+            "reasonCode": {
+              "type": "string",
+              "minLength": 1
+            },
+            "coordinates": {
+              "type": [
+                "object",
+                "array",
+                "null"
+              ]
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "problem",
+                  "solution"
+                ]
+              }
+            },
+            "assurance": {
+              "enum": [
+                "exact_structure",
+                "recognized_unconfirmed",
+                "human_confirmed"
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "reasonCode",
+            "coordinates",
+            "sources",
+            "assurance"
+          ]
+        }
+      },
+      "required": [
+        "reachability",
+        "uniqueness",
+        "routeValidity",
+        "mazeIdentity",
+        "renderedAgreement"
+      ],
+      "additionalProperties": false
+    },
+    "overallStatus": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "NEEDS_REVIEW",
+        "INVALID_INPUT",
+        "UNSUPPORTED",
+        "RESOURCE_LIMIT",
+        "ERROR"
+      ]
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "coordinates": {
+            "type": [
+              "object",
+              "array",
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "check",
+          "reasonCode",
+          "coordinates"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "evidence": {
+      "type": "object"
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "checked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notChecked": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "checked",
+        "notChecked"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "requestId",
+    "engineVersion",
+    "inputDigests",
+    "pagePairs",
+    "policy",
+    "limits",
+    "transforms",
+    "recognition",
+    "checks",
+    "overallStatus",
+    "issues",
+    "evidence",
+    "scope"
+  ],
+  "additionalProperties": false
+}
