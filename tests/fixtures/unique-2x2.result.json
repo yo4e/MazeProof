@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "mazeproof.result/1",
+  "engineVersion": "0.1.0-local",
+  "inputDigests": {
+    "problem": "bed2d2c49ac317ef4b4b2a6a237de9a6bfa328c8499abb60929a3c33fd05ba5c"
+  },
+  "pagePairs": [],
+  "policy": {
+    "unique_required": true
+  },
+  "limits": {
+    "maxBytes": 26214400,
+    "maxDimension": 250,
+    "maxSeconds": 30
+  },
+  "transforms": [],
+  "recognition": {
+    "status": "NOT_APPLICABLE",
+    "assurance": "exact_structure"
+  },
+  "checks": {
+    "reachability": {
+      "status": "PASS",
+      "reasonCode": "REACHABLE",
+      "coordinates": null,
+      "sources": [
+        "problem"
+      ],
+      "assurance": "exact_structure"
+    },
+    "uniqueness": {
+      "status": "PASS",
+      "reasonCode": "UNIQUE",
+      "coordinates": null,
+      "sources": [
+        "problem"
+      ],
+      "assurance": "exact_structure"
+    },
+    "routeValidity": {
+      "status": "PASS",
+      "reasonCode": "ROUTE_VALID",
+      "coordinates": null,
+      "sources": [
+        "problem"
+      ],
+      "assurance": "exact_structure"
+    },
+    "mazeIdentity": {
+      "status": "NOT_RUN",
+      "reasonCode": "NO_COMPARISON",
+      "coordinates": null,
+      "sources": [],
+      "assurance": "exact_structure"
+    },
+    "renderedAgreement": {
+      "status": "NOT_RUN",
+      "reasonCode": "NO_RENDERED_ADAPTER",
+      "coordinates": null,
+      "sources": [],
+      "assurance": "exact_structure"
+    }
+  },
+  "overallStatus": "PASS",
+  "issues": [],
+  "evidence": {
+    "path": [
+      {
+        "row": 0,
+        "col": 0
+      },
+      {
+        "row": 0,
+        "col": 1
+      },
+      {
+        "row": 1,
+        "col": 1
+      }
+    ],
+    "uniqueness": "unique",
+    "wholeGraphTree": false
+  },
+  "scope": {
+    "checked": [
+      "reachability",
+      "uniqueness",
+      "routeValidity"
+    ],
+    "notChecked": [
+      "mazeIdentity",
+      "renderedAgreement"
+    ]
+  }
+}
