@@ -1,9 +1,9 @@
 # MazeProof
 
-自作迷路と解答を検査する、独立して公開可能なローカルアプリの設計リポジトリ。
+自作迷路と解答を検査する、独立したローカルアプリを開発するリポジトリ。
 人間向け UI、CLI、MCP が同じ検証コアと結果 schema を使い、構造データと完成品の PNG / JPEG（JPG）/ PDF を検査する。
 
-**ローカル構造検証コアを実装中。画像認識・UI・CLI・MCP サーバーは未実装。**
+**構造 JSON の検証コアを実装済み。画像認識・UI・CLI・MCP サーバーは未実装。**
 画像からの認識とグラフ上の数学的判定を分離し、認識が不確かな完成品を無条件に PASS としない。
 
 - [設計仕様](docs/SPEC.md)：対象範囲、データ契約、判定と確認フロー
@@ -34,4 +34,27 @@ PASSは入力された構造とpolicyに限定され、完成画像の保証で�
 PNG/JPEG/PDFは現在UNSUPPORTED。CLI/UI/MCPおよびworkerの強制メモリ・時間制限は後続段階。
 
 [構造コアADR](docs/adr/0001-structure-core.md)、[入力schema](schemas/maze.schema.json)、[結果schema](schemas/result.schema.json)、[合成fixtureの由来](tests/fixtures/PROVENANCE.md)を参照。
-[ローカル検証記録](docs/CORE_VALIDATION.md)に実行コマンド・結果・制約を記載。ライセンス選定は引き続き保留。
+[ローカル検証記録](docs/CORE_VALIDATION.md)に実行コマンド・結果・制約を記載。
+
+## CI と貢献前の確認
+
+push と pull request ごとに、GitHub Actions が Python 3.9 / 3.13 で検査する。
+独立 oracle・故障注入・golden を含む13テスト、JSON Schemaと13結果シナリオ、Python構文、内部Markdownリンク、変更の空白を確認する。
+CI用の依存は製品の実行時依存ではない。同じ検査をローカルで再現するには repo root で次を実行する。
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-ci.txt
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python tests/check_schemas.py
+.venv/bin/python tests/check_repository.py
+git diff --check
+```
+
+CIは対応した構造データの回帰検査であり、画像認識品質やworkerの強制リソース制限を保証するものではない。
+[CIの範囲と設定](docs/CI.md)を参照。
+
+## ライセンスとコーヒー
+
+MazeProof のコード・文書・独立した合成fixtureは [MIT License](LICENSE) で利用できる。
+役に立ったら、[コーヒーを奢ってね ☕](https://ko-fi.com/yo4e)。支援は任意です。
