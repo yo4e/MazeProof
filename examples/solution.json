@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "mazeproof.maze/1",
+  "width": 2,
+  "height": 2,
+  "horizontalWalls": [
+    [
+      false,
+      true
+    ],
+    [
+      true,
+      false
+    ],
+    [
+      true,
+      false
+    ]
+  ],
+  "verticalWalls": [
+    [
+      true,
+      false,
+      true
+    ],
+    [
+      true,
+      true,
+      true
+    ]
+  ],
+  "entrance": {
+    "row": 0,
+    "col": 0,
+    "side": "N"
+  },
+  "exit": {
+    "row": 1,
+    "col": 1,
+    "side": "S"
+  },
+  "route": [
+    {
+      "row": 0,
+      "col": 0
+    },
+    {
+      "row": 0,
+      "col": 1
+    },
+    {
+      "row": 1,
+      "col": 1
+    }
+  ]
+}

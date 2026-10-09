@@ -32,9 +32,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install QA dependencies
         run: python -m pip install -r requirements-ci.txt
-      - name: Verify structure core and independent oracle
+      - name: Verify structure core, CLI, and independent oracle
         run: python -m unittest discover -s tests -v
-      - name: Verify JSON schemas and result scenarios
+      - name: Verify JSON schemas, CLI results, and examples
         run: python tests/check_schemas.py
       - name: Verify Python syntax and repository links
         run: python tests/check_repository.py

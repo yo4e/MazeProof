@@ -42,4 +42,22 @@ from unittest.mock import patch
 from mazeproof import core
 with patch.object(core, "_bridges", side_effect=RuntimeError("fault")):
     validators["result"].validate(validate_structure(json.dumps(obj)))
-print("Draft 2020-12 schemas and 13 result scenarios: OK")
+# Assert the actual CLI JSON envelopes, not a second rendering of core results.
+from test_cli import command
+cli_cases = [
+    (("examples/problem.json", "--solution", "examples/solution.json"), 0),
+    (("examples/multiple.json",), 1),
+    (("examples/wall-crossing.json",), 1),
+    (("examples/invalid.json",), 3),
+    (("examples/multiple.json", "--allow-multiple"), 0),
+    (("missing-schema-test.json",), 3),
+    ((), 3),
+]
+for arguments, expected_exit in cli_cases:
+    process = command(*arguments)
+    assert process.returncode == expected_exit, (arguments, process.returncode)
+    validators["result"].validate(json.loads(process.stdout))
+for name in ("problem", "solution", "multiple", "wall-crossing"):
+    validators["maze"].validate(json.loads((root / "examples" / (name + ".json")).read_text()))
+assert list(validators["maze"].iter_errors(json.loads((root / "examples/invalid.json").read_text())))
+print("Draft 2020-12 schemas: 13 core + 7 CLI result scenarios and 5 examples: OK")
