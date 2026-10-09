@@ -1,7 +1,7 @@
 # JSON CLI 実装・検証記録
 
 2026-10-10 JST、背景コマンドで実施。開始時 main は `cfc5c4efa78bf9fd65f9ef814605323976ff7ec2`（PR #3マージ済み）。open Issue/PRなし、既存ローカル変更なし、repo-local AGENTS/SKILLなし。
-今回のpush・公開・PR許可は確認できていないため、ローカル保存まで。remote CI実行・merge・deploy・課金・権限変更は行わない。
+初回CLI実装では許可確認前のためローカル保存までとした。2026-10-10の本人の追加承認により、push・PR・対象headのCI・merge・mainの最終検証を進める。deploy・課金・権限変更は対象外。
 
 ## 実装判断
 
@@ -33,5 +33,5 @@ git diff --check
 
 ## 未実施と引継ぎ
 
-remote保存/対象headのCIは未実施。親が今回のpush・draft PR許可を確認してからremote保存し、Python3.9/3.13の対象head CIを確認する。mergeは別承認。
+初回ローカル保存時にはremote保存/対象headのCIは未実施だった。後続の本人承認でPython3.9/3.13の対象head CIを確認し、成功時にmergeする。main CIと最終テストも確認する。remote結果はGitHubのPR/checksを正本とする。
 stdin、package配布、画像/PDF認識、UI/MCP、worker強制timeout/メモリ上限は未実装。構造PASSを完成画像PASSとして使わない。通常ファイルI/OやJSONdecodeを強制中断する仕組みも未実装。
