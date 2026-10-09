@@ -237,6 +237,18 @@ def _base(unique_required):
             "scope": {"checked": [], "notChecked": list(CHECK_NAMES)}}
 
 
+def error_result(status, reason_code, *, unique_required=True):
+    """Shared schema envelope for local-adapter failures before core validation."""
+    if status not in ("INVALID_INPUT", "UNSUPPORTED", "RESOURCE_LIMIT", "ERROR"):
+        raise ValueError("error status required")
+    result = _base(unique_required)
+    result["overallStatus"] = status
+    check_reason = "INTERNAL_ERROR" if status == "ERROR" else "INPUT_REJECTED"
+    result["checks"] = {name: _check("NOT_RUN", check_reason, []) for name in CHECK_NAMES}
+    result["issues"] = [{"check": None, "reasonCode": reason_code, "coordinates": None}]
+    return result
+
+
 def validate_structure(problem, solution=None, *, unique_required=True):
     """Validate UTF-8 JSON bytes/text. Optional solution is a complete maze + route.
 

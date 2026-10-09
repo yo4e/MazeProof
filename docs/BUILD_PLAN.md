@@ -14,6 +14,8 @@
 受入：唯一解・別解・未到達・壁横断・終端誤り・問題/解答壁差を期待 status と位置で返す。経路外 cycle は unique、全域木 false を同時に返せる。上限超過は RESOURCE_LIMIT、未要求チェックは NOT_RUN。CLI JSON が result schema を満たす。
 人間ゲート：反例とテスト結果をレビューし、認識を追加する前にコア契約を固定する。
 
+2026-10-10追記：構造コアを使うローカルJSON CLI・合成サンプル・回帰検査を実装（[検証記録](CLI_VALIDATION.md)）。remote保存とCIは許可確認後に行う。
+
 ## 2. PNG/JPEG adapter と最小ローカル UI（MVP）
 
 問題画像、赤線解答画像、入口出口指定、格子推定、wall/route overlay、unknown、修正・承認を実装する。完成品と JSON の比較も追加する。原本を保持し、しきい値や再サンプリングで topology が変わるケースを確認対象へ送る。

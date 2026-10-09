@@ -13,7 +13,7 @@ def main():
             ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
             count += 1
     documents = [ROOT / "README.md"]
-    for folder in ("docs", "tests/fixtures"):
+    for folder in ("docs", "tests/fixtures", "examples"):
         documents.extend((ROOT / folder).rglob("*.md"))
     links = 0
     for document in documents:
