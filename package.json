@@ -1,0 +1,9 @@
+{
+  "name": "mazeproof-dev",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write mazeproof/web",
+    "check": "prettier --check mazeproof/web && node --check mazeproof/web/app.js"
+  },
+  "devDependencies": {"prettier": "3.6.2"}
+}

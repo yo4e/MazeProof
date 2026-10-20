@@ -8,3 +8,9 @@ MazeMa商品、Slack添付、第三者repoのコード/画像は使用してい�
 - `unique-2x2.result.json`: 上記のexact_structure結果。requestIdのみ省略したgolden。checkedはreachability/uniqueness/routeValidity、mazeIdentity/renderedAgreementはNOT_RUN。更新時は意味の変更をレビューする。
 - 動的fixture: `tests/test_core.py` の `maze` が格子辺から壁配列を構成する。seedなしの全列挙は3×2の7辺×全順序付き端点対=3,840ケース。独立DFS oracleは辺集合上で全simple pathsを数える。
 - 故障注入: 壁追加、壁除去、解答断線/再訪/壁横断/終端ずれ、ペア壁・寸法・開口ずれ、JSON不正、上限、内部例外。期待値はテストに明示し、goldenを本番結果だけで自動承認しない。
+
+## 画像/PDFの合成素材（2026-10-20）
+
+`mazeproof/samples.py` の4×4蛇行迷路は手で定義した独立モデル・経路を描画する。`tests/test_imaging.py`でPNG/JPEG圧縮、透過、回転、部分的な壁、赤線断線・分岐・余分な線などを注入する。`tests/pdf_fixture.py`は手書きPDF構文からベクター、回転、過大ページ、文書JavaScript、添付の拒否ケースを生成する。JavaScriptはテスト用の固定文字列であり実行しない。
+
+全てMazeProofのオリジナルMIT素材。seed不要の決定的fixtureで、商品・私的資料・外部画像の転載はない。`scripts/generate_samples.py`と`tests`から再生成できる。UIテストの生成物は`.evidence/`へ保存しGitには含めない。

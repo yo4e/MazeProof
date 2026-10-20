@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MazeProof — 迷路の検品室</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="mark">▦</span
+        ><span>MazeProof<small>迷路の検品室</small></span>
+      </div>
+      <span class="local">● このMacで処理</span
+      ><button id="reset" class="quiet">新しい検品</button>
+    </header>
+    <main>
+      <section id="welcome">
+        <div class="intro">
+          <p class="eyebrow">FROM PIXELS TO PROOF</p>
+          <h1>その迷路を、<br />安心して届けるために。</h1>
+          <p>
+            壁と解答を画像から読み取り、目で確かめて検証。<br />「読めた」と「正しい」を、ひとつずつ確認します。
+          </p>
+          <div class="flow">
+            <span>01 読み込む</span><b>→</b><span>02 確かめる</span><b>→</b
+            ><span>03 検証・保存</span>
+          </div>
+        </div>
+        <form id="import-form" class="card import-card">
+          <div class="section-title">
+            <h2>新しい検品をはじめる</h2>
+            <span>PNG / JPEG / PDF</span>
+          </div>
+          <label class="file-field"
+            >問題画像 <span class="required">必須</span
+            ><input
+              id="problem-file"
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf"
+              required
+          /></label>
+          <label class="page-field"
+            >PDF の問題ページ
+            <input id="problem-page" type="number" min="1" max="20" value="1"
+          /></label>
+          <label class="file-field"
+            >解答画像 <span>任意・同じ迷路＋赤い線</span
+            ><input
+              id="solution-file"
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf"
+          /></label>
+          <label class="page-field"
+            >PDF の解答ページ
+            <input id="solution-page" type="number" min="1" max="20" value="1"
+          /></label>
+          <details>
+            <summary>元の構造 JSON とも照合する</summary>
+            <label
+              >問題の構造 JSON<input
+                id="reference-file"
+                type="file"
+                accept=".json"
+            /></label>
+          </details>
+          <button id="import-submit" type="submit" class="primary wide">
+            画像を読み込む <span>↗</span>
+          </button>
+          <p class="caption">
+            画像は外部送信されません。矩形格子・白い通路・黒い壁が対象です。PDF
+            は指定ページの見た目を検査します。
+          </p>
+          <div class="alternate">
+            <button id="demo" type="button" class="quiet">
+              合成サンプルで試す</button
+            ><label class="link-button"
+              >保存した作業を開く<input
+                id="project-file"
+                type="file"
+                accept=".json,.mazeproof"
+                hidden
+            /></label>
+          </div>
+        </form>
+      </section>
+      <section id="workbench" hidden>
+        <div class="work-heading">
+          <div>
+            <p class="eyebrow">REVIEW WORKSPACE</p>
+            <h1 id="work-title">壁を確かめる</h1>
+          </div>
+          <span id="approval-state" class="badge review">確認待ち</span>
+        </div>
+        <div class="workspace-grid">
+          <aside class="card controls">
+            <div class="tabs">
+              <button id="tab-problem" class="active">問題</button
+              ><button id="tab-solution">解答</button>
+            </div>
+            <p id="source-name" class="caption"></p>
+            <details id="grid-details">
+              <summary>格子・切り出し・回転</summary>
+              <p class="caption">
+                外周の壁の中心に枠を合わせてください。再認識すると修正と承認を取り消します。
+              </p>
+              <div class="fields">
+                <label
+                  >列<input id="cols" type="number" min="1" max="250" /></label
+                ><label
+                  >行<input id="rows" type="number" min="1" max="250" /></label
+                ><label
+                  >左 x<input id="x0" type="number" step="0.1" min="0" /></label
+                ><label
+                  >上 y<input id="y0" type="number" step="0.1" min="0" /></label
+                ><label
+                  >右 x<input id="x1" type="number" step="0.1" min="0" /></label
+                ><label
+                  >下 y<input id="y1" type="number" step="0.1" min="0"
+                /></label>
+              </div>
+              <button id="reanalyze">この格子で再認識</button
+              ><button id="rotate" class="quiet">右へ90°回転・再推定</button>
+            </details>
+            <h3>修正ツール</h3>
+            <div class="tools" id="tools">
+              <button data-tool="wall" class="active">壁を反転</button
+              ><button data-tool="resolve">境界を確認</button
+              ><button data-tool="entrance">入口</button
+              ><button data-tool="exit">出口</button
+              ><button data-tool="route">解答をなぞる</button>
+            </div>
+            <p id="tool-help" class="caption">
+              境界をクリックすると、壁と通路を切り替えます。
+            </p>
+            <div class="row">
+              <button id="undo">↶ 元に戻す</button
+              ><button id="redo">↷ やり直す</button>
+            </div>
+            <div id="route-controls" hidden>
+              <button id="clear-route" class="quiet">
+                解答線を消して描き直す</button
+              ><button id="reverse-route" class="quiet">解答の向きを反転</button
+              ><label class="check"
+                ><input
+                  id="route-reviewed"
+                  type="checkbox"
+                />赤線の連続性・全体を確認した</label
+              >
+            </div>
+            <details>
+              <summary>座標で境界を編集</summary>
+              <label
+                >向き<select id="edge-field">
+                  <option value="horizontalWalls">水平</option>
+                  <option value="verticalWalls">垂直</option>
+                </select></label
+              >
+              <div class="fields">
+                <label
+                  >行（0から）<input
+                    id="edge-row"
+                    type="number"
+                    value="0"
+                    min="0" /></label
+                ><label
+                  >列（0から）<input
+                    id="edge-col"
+                    type="number"
+                    value="0"
+                    min="0"
+                /></label>
+              </div>
+              <div class="row">
+                <button id="edge-toggle">壁を反転</button
+                ><button id="edge-resolve">確認</button>
+              </div>
+            </details>
+            <div class="review-list">
+              <h3>読み取りの確認箇所 <span id="unknown-count">0</span></h3>
+              <p class="caption">
+                橙色は判断が不確かな境界です。原画像を見て、反転または確認してください。
+              </p>
+              <div id="unknown-list"></div>
+              <button id="more-unknown" hidden>次の確認箇所</button>
+            </div>
+          </aside>
+          <div class="canvas-column">
+            <div class="canvas-toolbar">
+              <label class="check"
+                ><input
+                  id="overlay"
+                  type="checkbox"
+                  checked
+                />壁・解答の重ね表示</label
+              ><label
+                >拡大<input
+                  id="zoom"
+                  type="range"
+                  min="40"
+                  max="300"
+                  value="100" /></label
+              ><span id="zoom-value">100%</span>
+            </div>
+            <div class="canvas-viewport" id="viewport">
+              <canvas
+                id="canvas"
+                aria-label="迷路の原画像と認識した壁。座標で境界を編集するコントロールも利用できます。"
+              ></canvas>
+            </div>
+            <div class="legend">
+              <span class="teal-dot">認識した壁</span
+              ><span class="orange-dot">要確認</span
+              ><span class="red-dot">解答</span><span>S 入口 / G 出口</span>
+            </div>
+            <p id="observation-notes" class="caption"></p>
+            <section class="card result-panel">
+              <div class="section-title">
+                <h2>検証結果</h2>
+                <span id="result-status" class="badge review">確認待ち</span>
+              </div>
+              <p id="result-summary">
+                原画像とモデルを確認してから、確定した検証結果を出します。
+              </p>
+              <div id="checks" class="checks"></div>
+              <div id="issues"></div>
+              <details>
+                <summary>反例・差分・未検査の範囲</summary>
+                <pre id="evidence"></pre>
+              </details>
+            </section>
+          </div>
+        </div>
+        <div class="action-bar">
+          <div>
+            <label class="check"
+              ><input
+                id="unique-required"
+                type="checkbox"
+                checked
+              />唯一解を必須にする</label
+            ><label class="check consent"
+              ><input
+                id="confirm-review"
+                type="checkbox"
+              />問題・解答の格子、壁、入口出口、解答線を原画像と照合した</label
+            >
+          </div>
+          <div class="row">
+            <button id="evaluate">暫定チェック</button
+            ><button id="approve" class="primary">確認を承認して検証</button>
+          </div>
+        </div>
+        <div class="export-bar">
+          <p>
+            PASS
+            は承認したモデルに対する条件付きの結果です。画像そのものの完全な証明ではありません。
+          </p>
+          <div class="row">
+            <button id="save-project">作業を保存</button
+            ><button id="save-report">レポート JSON</button
+            ><button id="save-html">レポート HTML</button
+            ><button id="save-model">構造 JSON</button
+            ><button id="save-overlay">重ね画像 PNG</button>
+          </div>
+        </div>
+      </section>
+      <div id="busy" class="busy" hidden>
+        <span class="spinner"></span
+        ><span id="busy-text">画像を読み取っています…</span
+        ><button id="cancel">取り消す</button>
+      </div>
+      <div id="message" role="status" aria-live="polite" hidden></div>
+    </main>
+    <footer>
+      MazeProof 0.2
+      <span>ローカル処理 / 保存は明示操作のみ / 原本は変更しません</span>
+    </footer>
+    <dialog id="confirm-dialog">
+      <h2 id="dialog-title">作業を置き換えますか？</h2>
+      <p id="dialog-text">保存していない修正は失われます。</p>
+      <div class="row">
+        <button id="dialog-no">戻る</button
+        ><button id="dialog-yes" class="primary">続ける</button>
+      </div>
+    </dialog>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
