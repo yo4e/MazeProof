@@ -129,6 +129,47 @@ def main():
             checks.append(
                 "Wall edit -> approval revoked -> FAIL; undo/redo require fresh review"
             )
+            # Reading the guide must preserve an unsaved workspace and its
+            # confirmation state. Open it through the real header navigation.
+            page.locator("#edge-toggle").click()
+            expect(page.locator("#result-status")).to_have_text("変更あり・再確認")
+            preview = page.locator("#canvas").evaluate("(c) => c.toDataURL()")
+            request_count = len(requests)
+            with context.expect_page() as opened:
+                page.get_by_role("link", name="使い方 別タブ ↗").click()
+            guide = opened.value
+            guide.wait_for_load_state()
+            expect(guide).to_have_title("使い方 — MazeProof")
+            assert guide.url.endswith("/help") and "#" not in guide.url
+            assert guide.evaluate("window.opener === null")
+            assert not guide.locator("script").count()
+            assert guide.evaluate(
+                """() => [...document.querySelectorAll('a[href^="#"]')]
+                .every(a => document.getElementById(a.hash.slice(1)))"""
+            ), "Broken guide anchor"
+            guide.screenshot(path=str(evidence / "help-desktop.png"), full_page=True)
+            guide.get_by_role("link", name="チェックの場所と承認の手順を見る →").click()
+            expect(guide.locator("#approve")).to_be_in_viewport()
+            for width in (390, 320):
+                guide.set_viewport_size({"width": width, "height": 844})
+                assert guide.evaluate(
+                    "document.documentElement.scrollWidth <= innerWidth"
+                ), f"Guide overflow at {width}px"
+            guide.set_viewport_size({"width": 390, "height": 844})
+            guide.goto(guide.url.split("#")[0])
+            guide.screenshot(path=str(evidence / "help-mobile.png"), full_page=True)
+            guide.close()
+            assert len(requests) == request_count, "Help changed the workspace"
+            expect(page.locator("#result-status")).to_have_text("変更あり・再確認")
+            expect(page.locator("#confirm-review")).not_to_be_checked()
+            assert page.locator("#canvas").evaluate("(c) => c.toDataURL()") == preview
+            page.locator("#undo").click()
+            checks.append(
+                "Guide opens in isolated tab; unsaved edits, review state and canvas preserved"
+            )
+            checks.append(
+                "Guide anchors and 320/390px layouts, no session token in guide URL"
+            )
             # Trace route through the actual canvas.
             page.locator("#tab-solution").click()
             page.locator("#clear-route").click()
@@ -179,6 +220,28 @@ def main():
             expect(page.locator("#busy")).to_be_hidden()
             expect(page.locator("#result-status")).to_have_text("確認待ち")
             checks.append("Reopen approved project -> fresh confirmation required")
+            # Follow the guide's problem-only path: no solution is required,
+            # but the user must explicitly approve even with zero uncertainties.
+            page.locator("#reset").click()
+            page.locator("#dialog-yes").click()
+            page.locator("#problem-file").set_input_files(str(problem))
+            page.locator("#import-submit").click()
+            expect(page.locator("#workbench")).to_be_visible(timeout=45000)
+            expect(page.locator("#busy")).to_be_hidden()
+            expect(page.locator("#unknown-count")).to_have_text("0")
+            expect(page.locator("#tab-solution")).to_be_disabled()
+            expect(page.locator("#approve")).to_be_disabled()
+            page.locator("#evaluate").click()
+            expect(page.locator("#busy")).to_be_hidden()
+            expect(page.locator("#result-status")).to_have_text("確認待ち")
+            page.locator("#confirm-review").check()
+            page.locator("#approve").click()
+            expect(page.locator("#result-status")).to_have_text("条件付き PASS")
+            expect(page.locator("#checks")).to_contain_text("NO_ROUTE")
+            expect(page.locator("#checks")).to_contain_text("NO_COMPARISON")
+            checks.append(
+                "Documented problem-only path: provisional check, explicit approval, unchecked scope"
+            )
             # Bad input recovery and sequential import.
             page.locator("#reset").click()
             page.locator("#dialog-yes").click()

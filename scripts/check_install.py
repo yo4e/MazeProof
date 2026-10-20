@@ -33,7 +33,8 @@ def main():
                 raise AssertionError("Installed server failed to start")
             parts = urlsplit(line.removeprefix("MazeProof: "))
             origin = parts.scheme + "://" + parts.netloc
-            for path in ("/", "/app.js", "/style.css"):
+            assets = ("/", "/app.js", "/style.css", "/help", "/help.css")
+            for path in assets:
                 with urlopen(origin + path, timeout=10) as response:
                     assert response.status == 200 and len(response.read()) > 100
 
@@ -70,7 +71,7 @@ def main():
                 json.dumps(
                     {
                         "installedOutsideRepository": True,
-                        "staticAssets": 3,
+                        "staticAssets": len(assets),
                         "workerImageDecode": True,
                         "unconfirmedThenApproved": True,
                     },

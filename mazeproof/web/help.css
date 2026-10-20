@@ -1,0 +1,245 @@
+.help-page {
+  line-height: 1.9;
+}
+.help-page main {
+  max-width: 1160px;
+}
+.help-page a {
+  color: #126654;
+  text-underline-offset: 4px;
+}
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  transform: translateY(-150%);
+  background: #fff;
+  padding: 10px 16px;
+  z-index: 2;
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+.guide-intro {
+  max-width: 850px;
+  margin: 12px 0 50px;
+}
+.guide-intro h1 {
+  margin-bottom: 16px;
+}
+.guide-lead {
+  font-size: 18px;
+}
+.guide-intro .caption {
+  max-width: 700px;
+}
+.guide-callout {
+  border-left: 4px solid var(--green);
+  background: #e5eee6;
+  border-radius: 0 12px 12px 0;
+  padding: 22px 28px;
+  margin-top: 28px;
+}
+.guide-callout h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.guide-callout p {
+  margin: 8px 0 14px;
+}
+.guide-layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 52px;
+  align-items: start;
+}
+.guide-nav {
+  position: sticky;
+  top: 24px;
+  font-size: 13px;
+}
+.guide-nav p {
+  font-size: 11px;
+  color: #61766e;
+  font-weight: 700;
+  margin-top: 0;
+}
+.guide-nav ol {
+  padding-left: 23px;
+  margin: 12px 0 20px;
+}
+.guide-nav li {
+  padding: 5px 0;
+}
+.guide-content {
+  min-width: 0;
+}
+.guide-content section {
+  scroll-margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 30px;
+  margin-bottom: 55px;
+}
+.guide-content section > .eyebrow {
+  margin-bottom: 6px;
+}
+.guide-content h2 {
+  font-size: 26px;
+  margin: 0 0 18px;
+}
+.guide-content h3 {
+  font-size: 16px;
+  margin: 24px 0 8px;
+}
+.guide-content p {
+  margin: 0 0 18px;
+}
+.guide-content ol,
+.guide-content ul {
+  padding-left: 24px;
+  margin: 18px 0 24px;
+}
+.guide-content li {
+  padding-left: 4px;
+  margin-bottom: 12px;
+}
+.guide-note {
+  padding: 18px 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 24px 0;
+}
+.guide-note h3 {
+  margin: 0 0 8px;
+}
+.guide-note p:last-child {
+  margin-bottom: 0;
+}
+.guide-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  list-style: none;
+}
+.guide-content .guide-legend {
+  padding: 18px 0;
+}
+.guide-legend li {
+  margin: 0;
+}
+.guide-definitions {
+  margin: 22px 0;
+}
+.guide-definitions dt {
+  font-weight: 700;
+  margin-top: 24px;
+  font-size: 16px;
+}
+.guide-definitions dd {
+  margin: 6px 0 0;
+}
+.guide-table-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.guide-table-wrap:focus-visible {
+  outline: 3px solid #e3a94b;
+  outline-offset: 3px;
+}
+.guide-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.guide-table-wrap caption {
+  text-align: left;
+  padding: 14px 18px;
+  font-size: 12px;
+  color: #61766e;
+}
+.guide-table-wrap th,
+.guide-table-wrap td {
+  vertical-align: top;
+  padding: 14px 18px;
+  border-top: 1px solid var(--line);
+}
+.guide-table-wrap thead {
+  background: #edf3ed;
+}
+.guide-table-wrap th[scope="row"] {
+  width: 29%;
+  min-width: 110px;
+}
+.guide-content code {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.guide-back {
+  margin-top: 32px;
+}
+@media (max-width: 740px) {
+  .guide-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .guide-nav {
+    position: static;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 22px;
+  }
+  .help-page main {
+    padding: 30px 20px;
+  }
+  .guide-intro {
+    margin-bottom: 28px;
+  }
+  .guide-intro h1 {
+    font-size: 29px;
+  }
+  .guide-lead {
+    font-size: 16px;
+  }
+  .guide-lead br {
+    display: none;
+  }
+  .guide-callout {
+    padding: 18px 20px;
+  }
+  .guide-legend {
+    grid-template-columns: 1fr;
+  }
+  .guide-table-wrap th,
+  .guide-table-wrap td {
+    padding: 12px;
+  }
+}
+@media print {
+  .help-page header,
+  .help-page footer,
+  .guide-nav,
+  .guide-back,
+  .skip-link {
+    display: none;
+  }
+  .help-page {
+    background: white;
+    color: black;
+  }
+  .help-page main {
+    max-width: none;
+    padding: 0;
+  }
+  .guide-layout {
+    display: block;
+  }
+  .guide-content h2,
+  .guide-content h3,
+  .guide-definitions dt {
+    break-after: avoid;
+  }
+}

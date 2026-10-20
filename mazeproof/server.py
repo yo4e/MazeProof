@@ -17,6 +17,8 @@ from .workspace import Workspace
 MAX_BODY = 72 * 1024 * 1024
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
+    "/help": ("help.html", "text/html; charset=utf-8"),
+    "/help.css": ("help.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
 }

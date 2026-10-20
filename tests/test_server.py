@@ -56,6 +56,19 @@ class ServerTests(unittest.TestCase):
             self.request("/", headers={"Host": "attacker.example"})[0], 403
         )
         self.assertNotIn("Access-Control-Allow-Origin", headers)
+        # The guide is readable without a private session and remains local.
+        # It must not need a workspace or weaken the API's authentication.
+        for path, mime in (
+            ("/help", "text/html"),
+            ("/help.css", "text/css"),
+        ):
+            status, headers, _ = self.request(path, headers={"Authorization": ""})
+            self.assertEqual(status, 200)
+            self.assertTrue(headers["Content-Type"].startswith(mime))
+            self.assertIn("default-src 'none'", headers["Content-Security-Policy"])
+            self.assertEqual(
+                self.request(path, headers={"Host": "attacker.example"})[0], 403
+            )
 
     def test_auth_origin_and_json_rejected(self):
         for headers in (
