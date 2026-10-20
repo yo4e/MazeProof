@@ -4,6 +4,7 @@ import argparse
 import json
 import subprocess
 import tempfile
+import uuid
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
@@ -39,17 +40,25 @@ def main():
                     assert response.status == 200 and len(response.read()) > 100
 
             def post(path, body):
+                headers = {
+                    "Content-Type": "application/json",
+                    "Origin": origin,
+                    "Authorization": "Bearer " + parts.fragment,
+                }
+                importing = path in ("demo", "import", "restore", "batch-item")
+                request_id = str(uuid.uuid4())
+                if importing:
+                    headers["X-MazeProof-Import"] = request_id
                 request = Request(
                     origin + "/api/" + path,
                     json.dumps(body).encode(),
-                    {
-                        "Content-Type": "application/json",
-                        "Origin": origin,
-                        "Authorization": "Bearer " + parts.fragment,
-                    },
+                    headers,
                 )
                 with urlopen(request, timeout=40) as response:
-                    return json.load(response)
+                    result = json.load(response)
+                if importing:
+                    post("import-claim", {"requestId": request_id, "id": result["id"]})
+                return result
 
             document = post("demo", {})
             assert document["result"]["overallStatus"] == "NEEDS_REVIEW"

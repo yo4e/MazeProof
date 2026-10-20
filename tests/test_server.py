@@ -3,6 +3,7 @@
 import json
 import threading
 import unittest
+import uuid
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from unittest.mock import patch
@@ -24,13 +25,21 @@ class ServerTests(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join()
 
-    def request(self, path, body=None, headers=None, raw=None):
+    def request(self, path, body=None, headers=None, raw=None, claim=True):
         defaults = {
             "Origin": self.server.origin,
             "Authorization": "Bearer " + self.server.token,
             "Content-Type": "application/json",
         }
         defaults.update(headers or {})
+        importing = path in (
+            "/api/import",
+            "/api/demo",
+            "/api/restore",
+            "/api/batch-item",
+        )
+        if importing:
+            defaults.setdefault("X-MazeProof-Import", str(uuid.uuid4()))
         data = (
             raw
             if raw is not None
@@ -43,7 +52,17 @@ class ServerTests(unittest.TestCase):
             response = error
         with response:
             payload = response.read()
-            return response.status, response.headers, payload
+            status, response_headers = response.status, response.headers
+        if status == 200 and importing and claim:
+            accepted = self.request(
+                "/api/import-claim",
+                {
+                    "requestId": defaults["X-MazeProof-Import"],
+                    "id": json.loads(payload)["id"],
+                },
+            )
+            self.assertEqual(accepted[0], 200, accepted[2])
+        return status, response_headers, payload
 
     def test_static_headers_host_and_paths(self):
         status, headers, data = self.request("/")

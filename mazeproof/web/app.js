@@ -59,6 +59,11 @@ const errors = {
   GEOMETRY_NUMBER: "切り出し枠の数値を確認してください。",
   WORKSPACE_LIMIT:
     "保持できる作業量の上限です。一括作業を保存して件数を分けるか、不要な行を除いて再試行してください。",
+  IMPORT_EXPIRED:
+    "読込み結果の受取り期限が切れました。もう一度読み込んでください。",
+  IMPORT_CANCELLED: "読み込みを取り消しました。もう一度読み込めます。",
+  IMPORT_REQUEST_LIMIT:
+    "読込み要求が多いため、少し待ってから再試行してください。",
 };
 function message(text) {
   $("message").textContent = text;
@@ -69,12 +74,13 @@ function message(text) {
 function fail(error) {
   message(error.message || "処理に失敗しました。もう一度お試しください。");
 }
-async function api(path, body, signal) {
+async function request(path, body, signal, headers = {}) {
   const response = await fetch("/api/" + path, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: "Bearer " + token,
+      ...headers,
     },
     body: JSON.stringify(body),
     signal,
@@ -89,6 +95,30 @@ async function api(path, body, signal) {
     throw error;
   }
   return data;
+}
+async function api(path, body, signal) {
+  if (!["import", "demo", "restore", "batch-item"].includes(path))
+    return request(path, body, signal);
+  const requestId = crypto.randomUUID();
+  const abandon = () =>
+    request("import-cancel", { requestId }, AbortSignal.timeout(10000)).catch(
+      () => {},
+    ); // Unreceived results also expire on the server.
+  signal?.addEventListener("abort", abandon, { once: true });
+  try {
+    signal?.throwIfAborted();
+    const next = await request(path, body, signal, {
+      "X-MazeProof-Import": requestId,
+    });
+    await request("import-claim", { requestId, id: next.id }, signal);
+    signal?.throwIfAborted();
+    return next;
+  } catch (error) {
+    await abandon();
+    throw error;
+  } finally {
+    signal?.removeEventListener("abort", abandon);
+  }
 }
 function setBusy(value, cancellable = true) {
   busy = value;
@@ -119,6 +149,9 @@ async function confirmAction(title, text) {
 function invalidate() {
   state.result = null;
   state.approved = false;
+  // Undo restores the model, never the user's confirmation. Keep this until
+  // the server has acknowledged revocation in the same request as evaluation.
+  state.reviewInvalidated = true;
   dirty = true;
   unsaved = true;
   $("confirm-review").checked = false;
@@ -174,7 +207,10 @@ async function importWork(path, body) {
       );
     }
     const next = await api(path, body, controller.signal);
-    if (generation !== serial) return;
+    if (generation !== serial) {
+      await api("close", { id: next.id, revision: next.revision });
+      return false;
+    }
     const old = state;
     await display(next);
     if (old)
@@ -577,7 +613,7 @@ $("overlay").onchange = draw;
 $("zoom").oninput = draw;
 window.addEventListener("resize", draw);
 $("undo").onclick = () => {
-  if (!undo.length) return;
+  if (busy || !undo.length) return;
   redo.push(
     clone({ edits: state.edits, uniqueRequired: state.uniqueRequired }),
   );
@@ -587,7 +623,7 @@ $("undo").onclick = () => {
   draw();
 };
 $("redo").onclick = () => {
-  if (!redo.length) return;
+  if (busy || !redo.length) return;
   undo.push(
     clone({ edits: state.edits, uniqueRequired: state.uniqueRequired }),
   );
@@ -716,17 +752,27 @@ function renderResult() {
     : "再検査すると反例と差分を表示します。";
   updateApprovalButton();
 }
-async function evaluate(approve = false) {
-  if (!state) return false;
+async function whileBusy(action) {
+  if (busy) return false;
   setBusy(true, false);
+  try {
+    return await action();
+  } finally {
+    setBusy(false);
+  }
+}
+async function evaluateCurrent(approve = false) {
+  if (!state) return false;
   try {
     const next = await api(approve ? "approve" : "evaluate", {
       id: state.id,
       revision: state.revision,
       edits: state.edits,
       uniqueRequired: state.uniqueRequired,
+      revokeApproval: Boolean(state.reviewInvalidated),
     });
     Object.assign(state, next);
+    state.reviewInvalidated = false;
     dirty = false;
     batchUI?.updated(state);
     renderControls();
@@ -745,9 +791,10 @@ async function evaluate(approve = false) {
     renderResult();
     fail(error);
     return false;
-  } finally {
-    setBusy(false);
   }
+}
+async function evaluate(approve = false) {
+  return whileBusy(() => evaluateCurrent(approve));
 }
 $("evaluate").onclick = () => evaluate();
 $("approve").onclick = () => {
@@ -769,17 +816,19 @@ function download(name, data, type = "application/json") {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 async function exportProject() {
-  if (!(await evaluate())) return null;
-  try {
-    const data = await api("export", {
-      id: state.id,
-      revision: state.revision,
-    });
-    return data.project;
-  } catch (error) {
-    fail(error);
-    return null;
-  }
+  return whileBusy(async () => {
+    if (!(await evaluateCurrent())) return null;
+    try {
+      const data = await api("export", {
+        id: state.id,
+        revision: state.revision,
+      });
+      return data.project;
+    } catch (error) {
+      fail(error);
+      return null;
+    }
+  });
 }
 $("save-project").onclick = async () => {
   const project = await exportProject();

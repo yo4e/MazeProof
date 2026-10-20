@@ -4,8 +4,10 @@ import argparse
 import hmac
 import json
 import math
+import re
 import secrets
 import threading
+import time
 from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -17,6 +19,11 @@ from .workspace import Workspace, canonical
 MAX_BODY = 72 * 1024 * 1024
 MAX_WORKSPACES = 128
 MAX_STORED_BYTES = 192 * 1024 * 1024
+IMPORT_LEASE_SECONDS = 60
+IMPORT_RECORD_SECONDS = 120
+MAX_IMPORT_RECORDS = 512
+IMPORT_PATHS = {"/api/import", "/api/demo", "/api/restore", "/api/batch-item"}
+IMPORT_CONTROLS = {"/api/import-claim", "/api/import-cancel"}
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/help": ("help.html", "text/html; charset=utf-8"),
@@ -37,12 +44,105 @@ class LocalServer(ThreadingHTTPServer):
         self.workspaces = OrderedDict()
         self.storage_costs = {}
         self.operation_lock = threading.Lock()
+        self.import_lock = threading.Lock()
+        self.imports = {}
 
     @property
     def origin(self):
         return "http://127.0.0.1:" + str(self.server_address[1])
 
-    def put(self, workspace):
+    def _prune_imports(self):
+        now = time.monotonic()
+        for request_id, record in list(self.imports.items()):
+            if record["expires"] <= now:
+                # Only unclaimed results expire. Claimed work remains intact.
+                del self.imports[request_id]
+
+    def service_actions(self):
+        with self.import_lock:
+            self._prune_imports()
+
+    @staticmethod
+    def check_request_id(request_id):
+        if not isinstance(request_id, str) or not re.fullmatch(
+            r"[A-Za-z0-9_-]{16,80}", request_id
+        ):
+            raise core.Rejected("INVALID_INPUT", "IMPORT_REQUEST_ID")
+
+    def begin_import(self, request_id):
+        self.check_request_id(request_id)
+        with self.import_lock:
+            self._prune_imports()
+            existing = self.imports.get(request_id)
+            if existing:
+                raise core.Rejected(
+                    "INVALID_INPUT",
+                    "IMPORT_CANCELLED"
+                    if existing["state"] == "cancelled"
+                    else "DUPLICATE_IMPORT",
+                )
+            if len(self.imports) >= MAX_IMPORT_RECORDS:
+                raise core.Rejected("RESOURCE_LIMIT", "IMPORT_REQUEST_LIMIT")
+            self.imports[request_id] = {"state": "reading", "expires": math.inf}
+
+    def finish_import(self, request_id):
+        with self.import_lock:
+            record = self.imports.get(request_id)
+            if record and record["state"] == "reading":
+                self.imports[request_id] = {
+                    "state": "cancelled",
+                    "expires": time.monotonic() + IMPORT_RECORD_SECONDS,
+                }
+
+    def cancel_import(self, request_id):
+        self.check_request_id(request_id)
+        with self.import_lock:
+            self._prune_imports()
+            record = self.imports.get(request_id)
+            if record and record["state"] == "claimed":
+                self.workspaces.pop(record["id"], None)
+                self.storage_costs.pop(record["id"], None)
+            if record is None and len(self.imports) >= MAX_IMPORT_RECORDS:
+                raise core.Rejected("RESOURCE_LIMIT", "IMPORT_REQUEST_LIMIT")
+            # A tombstone also handles cancellation arriving before the import.
+            self.imports[request_id] = {
+                "state": "cancelled",
+                "expires": time.monotonic() + IMPORT_RECORD_SECONDS,
+            }
+        return {"cancelled": True}
+
+    def claim_import(self, request_id, key):
+        self.check_request_id(request_id)
+        with self.import_lock:
+            self._prune_imports()
+            record = self.imports.get(request_id)
+            if (
+                not record
+                or record["state"] not in ("pending", "claimed")
+                or record["id"] != key
+            ):
+                raise core.Rejected("INVALID_INPUT", "IMPORT_EXPIRED")
+            if record["state"] == "pending":
+                self.workspaces[key] = record["workspace"]
+                self.storage_costs[key] = record["cost"]
+                self.imports[request_id] = {
+                    "state": "claimed",
+                    "id": key,
+                    # Keep cancellation possible if the claim response itself
+                    # is lost. Closing the owned workspace releases this record.
+                    "expires": math.inf,
+                }
+        return {"claimed": True}
+
+    def close_workspace(self, key):
+        with self.import_lock:
+            self.workspaces.pop(key, None)
+            self.storage_costs.pop(key, None)
+            for request_id, record in list(self.imports.items()):
+                if record["state"] == "claimed" and record["id"] == key:
+                    del self.imports[request_id]
+
+    def put(self, workspace, request_id=None):
         # Never evict another maze's edits/approval to make room for a batch.
         # Reserve for growth of routes and resolved-boundary lists as well as
         # the serialized sources/observations. This is a storage budget, not an
@@ -53,20 +153,39 @@ class LocalServer(ThreadingHTTPServer):
             obs["model"]["width"] * obs["model"]["height"]
             for obs in workspace.observations.values()
         )
-        if (
-            len(self.workspaces) >= MAX_WORKSPACES
-            or sum(self.storage_costs.values()) + cost > MAX_STORED_BYTES
-        ):
-            raise core.Rejected("RESOURCE_LIMIT", "WORKSPACE_LIMIT")
         key = secrets.token_urlsafe(18)
-        self.workspaces[key] = workspace
-        self.storage_costs[key] = cost
-        return {
+        result = {
             "id": key,
             "sources": workspace.sources,
             **workspace.snapshot(),
             "result": workspace.evaluate(),
         }
+        with self.import_lock:
+            self._prune_imports()
+            record = self.imports.get(request_id)
+            if request_id is not None and (not record or record["state"] != "reading"):
+                raise core.Rejected("INVALID_INPUT", "IMPORT_CANCELLED")
+            pending = [r for r in self.imports.values() if r["state"] == "pending"]
+            if (
+                len(self.workspaces) + len(pending) >= MAX_WORKSPACES
+                or sum(self.storage_costs.values())
+                + sum(r["cost"] for r in pending)
+                + cost
+                > MAX_STORED_BYTES
+            ):
+                raise core.Rejected("RESOURCE_LIMIT", "WORKSPACE_LIMIT")
+            if request_id is None:
+                self.workspaces[key] = workspace
+                self.storage_costs[key] = cost
+            else:
+                self.imports[request_id] = {
+                    "state": "pending",
+                    "id": key,
+                    "workspace": workspace,
+                    "cost": cost,
+                    "expires": time.monotonic() + IMPORT_LEASE_SECONDS,
+                }
+        return result
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -85,21 +204,22 @@ class Handler(BaseHTTPRequestHandler):
             if isinstance(body, bytes)
             else json.dumps(body, allow_nan=False).encode()
         )
-        self.send_response(status)
-        self.send_header("Content-Type", mime)
-        self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Referrer-Policy", "no-referrer")
-        self.send_header(
-            "Content-Security-Policy",
-            "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
-        )
-        self.end_headers()
         try:
+            self.send_response(status)
+            self.send_header("Content-Type", mime)
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header(
+                "Content-Security-Policy",
+                "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+            )
+            self.end_headers()
             self.wfile.write(data)
         except (OSError, TimeoutError):
-            pass
+            return False
+        return True
 
     def host_ok(self):
         return self.headers.get("Host") == urlsplit(self.server.origin).netloc
@@ -133,12 +253,16 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "-1"))
         except ValueError:
             length = -1
-        if not 0 <= length <= MAX_BODY:
+        control = self.path in IMPORT_CONTROLS
+        if not 0 <= length <= (1024 if control else MAX_BODY):
             self.send(413, {"error": "REQUEST_SIZE_LIMIT"})
             return
-        if not self.server.operation_lock.acquire(blocking=False):
+        # Cancellation/receipt are bounded metadata operations. They must remain
+        # available while the image worker owns the expensive-operation lock.
+        if not control and not self.server.operation_lock.acquire(blocking=False):
             self.send(409, {"error": "BUSY"})
             return
+        self.import_request_id = None
         try:
             raw = self.rfile.read(length)
             if len(raw) != length:
@@ -169,8 +293,13 @@ class Handler(BaseHTTPRequestHandler):
                 parse_constant=constant,
                 parse_float=number,
             )
+            if self.path in IMPORT_PATHS:
+                request_id = self.headers.get("X-MazeProof-Import")
+                self.server.begin_import(request_id)
+                self.import_request_id = request_id
             result = self.dispatch(body)
-            self.send(200, result)
+            if not self.send(200, result) and self.import_request_id:
+                self.server.cancel_import(self.import_request_id)
         except core.Rejected as error:
             self.send(
                 400,
@@ -196,24 +325,38 @@ class Handler(BaseHTTPRequestHandler):
                 },
             )
         finally:
-            self.server.operation_lock.release()
+            if self.import_request_id:
+                self.server.finish_import(self.import_request_id)
+            if not control:
+                self.server.operation_lock.release()
 
     def dispatch(self, body):
+        if self.path == "/api/import-cancel":
+            core._keys(body, ("requestId",))
+            return self.server.cancel_import(body["requestId"])
+        if self.path == "/api/import-claim":
+            core._keys(body, ("requestId", "id"))
+            return self.server.claim_import(body["requestId"], body["id"])
         if self.path == "/api/batch-item":
             from .batch import inspect_item
 
-            return self.server.put(inspect_item(body))
+            return self.server.put(inspect_item(body), self.import_request_id)
         if self.path == "/api/import":
             core._keys(body, ("sources",), ("reference",))
-            return self.server.put(Workspace(body["sources"], body.get("reference")))
+            return self.server.put(
+                Workspace(body["sources"], body.get("reference")),
+                self.import_request_id,
+            )
         if self.path == "/api/demo":
             core._keys(body, ())
             from .samples import demo_sources
 
-            return self.server.put(Workspace(demo_sources()))
+            return self.server.put(Workspace(demo_sources()), self.import_request_id)
         if self.path == "/api/restore":
             core._keys(body, ("project",))
-            return self.server.put(Workspace.restore(body["project"]))
+            return self.server.put(
+                Workspace.restore(body["project"]), self.import_request_id
+            )
         if self.path == "/api/state":
             core._keys(body, ("id",))
             workspace = self.server.workspaces.get(body["id"])
@@ -224,15 +367,16 @@ class Handler(BaseHTTPRequestHandler):
                 **workspace.snapshot(),
                 "result": workspace.evaluate(),
             }
-        core._keys(body, ("id", "revision"), ("edits", "uniqueRequired"))
+        core._keys(
+            body, ("id", "revision"), ("edits", "uniqueRequired", "revokeApproval")
+        )
         workspace = self.server.workspaces.get(body["id"])
         if workspace is None:
             raise core.Rejected("INVALID_INPUT", "SESSION_EXPIRED")
         if type(body["revision"]) is not int or body["revision"] != workspace.revision:
             raise core.Rejected("INVALID_INPUT", "STALE_REVISION")
         if self.path == "/api/close":
-            del self.server.workspaces[body["id"]]
-            self.server.storage_costs.pop(body["id"], None)
+            self.server.close_workspace(body["id"])
             return {"closed": True}
         if self.path == "/api/revoke":
             workspace.approved_digest = None
@@ -240,7 +384,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.path not in ("/api/evaluate", "/api/approve", "/api/export"):
             raise core.Rejected("INVALID_INPUT", "UNKNOWN_OPERATION")
         if "edits" in body:
-            workspace.set_edits(body["edits"], body["uniqueRequired"])
+            workspace.set_edits(
+                body["edits"],
+                body["uniqueRequired"],
+                revoke_approval=body.get("revokeApproval", False),
+            )
+        elif "revokeApproval" in body:
+            raise core.Rejected("INVALID_INPUT", "EDITS_REQUIRED")
         if self.path == "/api/export":
             return {"project": workspace.export(), "revision": workspace.revision}
         result = workspace.evaluate(approve=self.path == "/api/approve")
@@ -271,5 +421,6 @@ def main(argv=None):
     finally:
         server.workspaces.clear()
         server.storage_costs.clear()
+        server.imports.clear()
         server.server_close()
     return 0

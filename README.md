@@ -37,7 +37,7 @@ python3.12 -m venv .venv
 | LLM自身が自由対話で一連の検品を行うこと | **未検証**。SDKの接続試験とは別 |
 | 利用者の検品時間短縮・見落とし削減 | **未計測** |
 
-各テストの件数・条件・制限は[一括検品の検証記録](docs/BATCH_VALIDATION.md)、ブランチと試用版タグの位置付けは[リポジトリの状態](docs/REPOSITORY_STATUS.md)、変更点は[変更履歴](CHANGELOG.md)を参照してください。最新HEADのリモートCI結果は上のバッジとGitHubのChecksで確認できます。
+各テストの件数・条件・制限は[一括検品の検証記録](docs/BATCH_VALIDATION.md)と[レビュー修正の検証記録](docs/REVIEW_FIX_VALIDATION.md)、ブランチと試用版タグの位置付けは[リポジトリの状態](docs/REPOSITORY_STATUS.md)、変更点は[変更履歴](CHANGELOG.md)を参照してください。最新HEADのリモートCI結果は上のバッジとGitHubのChecksで確認できます。
 
 ## 検品の流れ
 

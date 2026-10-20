@@ -343,6 +343,52 @@ def recognize(image, geometry=None, *, answer=False):
     }
 
 
+def _one_component(mask):
+    """Exact 8-neighbor connectivity, keeping only the previous row's runs.
+
+    No dilation, gap filling, full-size label image, or per-pixel Python queue.
+    A component that ends before another begins proves disconnection early.
+    """
+    previous = []
+    labels = 0
+    finished = False
+    for row in mask:
+        changes = np.diff(np.pad(row.astype(np.int8), (1, 1)))
+        starts = np.flatnonzero(changes == 1)
+        ends = np.flatnonzero(changes == -1) - 1
+        parents = list(range(labels + len(starts)))
+
+        def root(value):
+            while parents[value] != value:
+                parents[value] = parents[parents[value]]
+                value = parents[value]
+            return value
+
+        offset = 0
+        for index, (start, end) in enumerate(zip(starts, ends)):
+            while offset < len(previous) and previous[offset][1] < start - 1:
+                offset += 1
+            cursor = offset
+            while cursor < len(previous) and previous[cursor][0] <= end + 1:
+                parents[root(previous[cursor][2])] = root(labels + index)
+                cursor += 1
+        current_roots = {root(labels + i) for i in range(len(starts))}
+        ended = {root(i) for i in range(labels)} - current_roots
+        if finished and current_roots:
+            return False
+        if ended:
+            if current_roots or len(ended) > 1 or finished:
+                return False
+            finished = True
+        compact = {label: i for i, label in enumerate(current_roots)}
+        previous = [
+            (start, end, compact[root(labels + i)])
+            for i, (start, end) in enumerate(zip(starts, ends))
+        ]
+        labels = len(current_roots)
+    return finished or labels == 1
+
+
 def recognize_route(red, geom, model):
     """Infer a single red chain without using the maze solver to fill gaps."""
     x0, y0, x1, y1, cols, rows = (
@@ -368,6 +414,10 @@ def recognize_route(red, geom, model):
                 patch = _patch(red, *box)
                 coverage = float(np.any(patch, axis=0 if horizontal else 1).mean())
                 if coverage >= 0.995:
+                    # Projection alone also covers disconnected, offset strokes.
+                    # Keep the candidate for editing, but require route review.
+                    if not _one_component(patch):
+                        uncertain = True
                     neighbor = node + (1 if horizontal else cols)
                     graph[node].append(neighbor)
                     graph[neighbor].append(node)
@@ -396,6 +446,9 @@ def recognize_route(red, geom, model):
         red & ~accounted, x0 + radius, y0 + radius, x1 - radius, y1 - radius
     )
     if inside.sum() > 3:
+        uncertain = True
+    # Connections must also agree across cell centers and corridor boundaries.
+    if not _one_component(_patch(red, x0, y0, x1 + 1, y1 + 1)):
         uncertain = True
     return [{"row": n // cols, "col": n % cols} for n in path], bool(uncertain)
 

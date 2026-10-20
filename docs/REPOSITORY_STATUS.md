@@ -34,7 +34,7 @@
 
 - [基本アプリ](WORKBENCH_VALIDATION.md)、[使い方](HELP_VALIDATION.md)、[一括検品](BATCH_VALIDATION.md)は、その実装時点の測定記録。文中の「未push」「remote CI未実施」は記録時点の状態である。
 - 最新のリモート結果は[試用版のGitHub Actions](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml?query=branch%3Afeat%2Flocal-image-workbench)とPRのChecksを正本とする。**対象コミットSHA**と各jobの結果を確認する。過去のmainの成功や、実行中のjobを最新HEADの成功として扱わない。
-- ローカルでは52件のunittest、単一UI15・一括UI11シナリオ、公式MCP SDKクライアント6項目を確認済み。最終HEADでも同じ検査を実行する。
+- レビュー修正後のローカルでは61件のunittest、単一UI15・一括UI12・レビュー回帰UI9シナリオ、公式MCP SDKクライアント6項目、wheelの新規導入を確認済み。[修正内容と再現手順](REVIEW_FIX_VALIDATION.md)。
 - **LLMを含む自由対話、特定GUI型MCPホストへの恒久登録、実利用者による検品時間・見落としの比較は未検証・未計測。** SDKの実接続試験が成功したことと区別する。
 - PDFは指定ページを描画した見た目の検査まで。ベクター構造との独立照合は未対応。未確認画像を自動でPASSにする機能はない。
 

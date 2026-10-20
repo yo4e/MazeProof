@@ -8,6 +8,7 @@
 - loopback HTTPのHost/Origin/token検査、競合、エラー復帰
 - 結果schema、サンプル、Python構文・内部リンク、Ruff、JavaScript構文、Prettier
 - 別jobで専用headless Chromiumを使った単一・一括UI一連操作（100件、停止・保存再開、承認取消、エラー復帰）
+- レビュー回帰UI（未同期undo、遅延・失敗する保存、受付後の取消、受領確認の応答欠落）
 - 分離したQA環境の公式MCP Python SDKから実stdioサーバーへ接続する一括検品試験
 
 ローカル手順は[README](../README.md)参照。UI証拠は`.evidence/`へ保存し、リポジトリやCI artifactへ自動公開しない。製品データはテストに使わない。

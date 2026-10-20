@@ -161,6 +161,35 @@ def main():
             checks.append(
                 "Per-item explicit approval survives navigation beyond the former four-item cache"
             )
+            # Undo before any synchronization must not revive the old approval
+            # through list navigation or the subsequent batch export.
+            page.locator("#tab-problem").click()
+            page.locator("#edge-field").select_option("verticalWalls")
+            page.locator("#edge-row").fill("0")
+            page.locator("#edge-col").fill("1")
+            page.locator("#edge-toggle").click()
+            page.locator("#undo").click()
+            page.locator("#batch-back").click()
+            expect(page.locator("#batch-counts")).to_contain_text("条件付き PASS 0")
+            with page.expect_download() as download:
+                page.locator("#batch-save").click()
+            undo_path = evidence / "undo.mazeproof-batch"
+            download.value.save_as(undo_path)
+            undo_saved = json.loads(undo_path.read_text())
+            assert (
+                undo_saved["items"][0]["project"]["result"]["overallStatus"]
+                == "NEEDS_REVIEW"
+            )
+            page.locator("#batch-result-rows tr").nth(0).get_by_role(
+                "button", name="確認する", exact=True
+            ).click()
+            expect(page.locator("#result-status")).to_have_text("確認待ち")
+            page.locator("#confirm-review").check()
+            page.locator("#approve").click()
+            expect(page.locator("#result-status")).to_have_text("条件付き PASS")
+            checks.append(
+                "Unsynced edit/undo stays unconfirmed through batch navigation and save"
+            )
             # Change an approved wall; list/export must never retain that PASS.
             page.locator("#tab-problem").click()
             page.locator("#edge-field").select_option("verticalWalls")

@@ -105,10 +105,12 @@ class Workspace:
             }
         )
 
-    def set_edits(self, edits, unique_required):
+    def set_edits(self, edits, unique_required, *, revoke_approval=False):
         core._keys(edits, tuple(self.edits))
         if type(unique_required) is not bool:
             raise Rejected("INVALID_INPUT", "POLICY_TYPE")
+        if type(revoke_approval) is not bool:
+            raise Rejected("INVALID_INPUT", "APPROVAL_REVOCATION_TYPE")
         # Allow semantically invalid edits (e.g. an extra opening), but bound shape
         # and types. The verifier explains the exact repair needed.
         for role, edit in edits.items():
@@ -169,6 +171,10 @@ class Workspace:
                 raise Rejected("INVALID_INPUT", "UNKNOWN_RESOLUTION")
             if type(edit["routeReviewed"]) is not bool:
                 raise Rejected("INVALID_INPUT", "ROUTE_REVIEW_TYPE")
+        # A client edit followed by undo can produce the same model. Its human
+        # confirmation is still invalidated; a digest comparison cannot see it.
+        if revoke_approval:
+            self.approved_digest = None
         if (
             canonical(edits) != canonical(self.edits)
             or unique_required != self.unique_required

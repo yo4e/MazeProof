@@ -61,6 +61,7 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python scripts/e2e.py
       - run: python scripts/batch_e2e.py
+      - run: python scripts/review_e2e.py
       - name: Official MCP client integration
         run: |
           python -m venv .evidence/mcp-client-venv
