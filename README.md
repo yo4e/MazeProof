@@ -1,22 +1,43 @@
 # MazeProof
 
+**画像・一括検品は試用版です。** このREADMEは [`feat/local-image-workbench`](https://github.com/yo4e/MazeProof/tree/feat/local-image-workbench) の実装を説明します。`main` は構造JSON用のコア・CLI版です。画像版は作業ブランチから導入してください。正式リリース・mainへのマージはまだ行っていません。
+
+[![試用版CI](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml/badge.svg?branch=feat%2Flocal-image-workbench)](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml?query=branch%3Afeat%2Flocal-image-workbench)
+
 迷路の問題画像と赤線入り解答を読み込み、壁・格子・入口出口を確認して検証するローカルアプリです。PNG / JPEG、PDF の指定ページ、構造 JSON を扱います。
 
 **画像の認識と数学的な検証は別です。未承認の画像は必ず `NEEDS_REVIEW`。承認後の `PASS` も、確認したモデルに対する条件付きの結論です。**
 
 ## 起動する
 
-Mac / Linux、Python **3.12 以上**が必要です。初回の依存インストールにはネット接続が必要ですが、起動後の画像処理はローカルで完結します。Node.js は通常の利用には不要です。
+Git、Mac / Linux、Python **3.12 以上**が必要です。初回の取得・依存インストールにはネット接続が必要ですが、起動後の画像処理はローカルで完結します。Node.js は通常の利用には不要です。ターミナルで次を順に実行します。
 
 ```sh
+git clone --branch feat/local-image-workbench https://github.com/yo4e/MazeProof.git
+cd MazeProof
 python3.12 -m venv .venv
 .venv/bin/python -m pip install .
 .venv/bin/mazeproof serve
 ```
 
+すでにこのブランチを取得済みなら、リポジトリのフォルダで仮想環境作成から進めます。`python3.12` が見つからない場合はPython 3.12以上を先に導入し、その実行コマンドで置き換えてください。
+
 ターミナルに表示された `http://127.0.0.1:.../#...` をブラウザで開きます。URL の後半はセッション用の秘密です。他人に共有しないでください。自動でブラウザを起動したり画面を切り替えたりはしません。終了はターミナルで `Ctrl+C`。
 
-インストール後は好きなフォルダから `mazeproof serve` を起動できます。ソースから開発する場合は `pip install -e .`。固定ポートが必要なら `mazeproof serve --port 8765`。
+最初は **「合成サンプルで試す」** で画面を確かめ、上部の **「使い方」** を開いてください。自分の画像は「問題画像」から、複数枚は「複数まとめて検品」から始めます。
+
+次回は同じフォルダで `.venv/bin/mazeproof serve` を実行すれば起動します。固定ポートが必要なら `.venv/bin/mazeproof serve --port 8765`。別のフォルダから使うときは実行ファイルの絶対パスを指定するか、仮想環境を有効化してください。ソースを編集しながら使う場合は `.venv/bin/python -m pip install -e .`。
+
+### 検証できている範囲
+
+| 範囲 | 状況 |
+| --- | --- |
+| 画像投入・修正・承認・保存、一括100件・エラー復帰・再開 | 合成入力を使った実UIテストで確認 |
+| MCPからの検査・結果取得 | 公式Python SDKクライアントによる実stdio接続で確認 |
+| LLM自身が自由対話で一連の検品を行うこと | **未検証**。SDKの接続試験とは別 |
+| 利用者の検品時間短縮・見落とし削減 | **未計測** |
+
+各テストの件数・条件・制限は[一括検品の検証記録](docs/BATCH_VALIDATION.md)、ブランチと試用版タグの位置付けは[リポジトリの状態](docs/REPOSITORY_STATUS.md)、変更点は[変更履歴](CHANGELOG.md)を参照してください。最新HEADのリモートCI結果は上のバッジとGitHubのChecksで確認できます。
 
 ## 検品の流れ
 
@@ -66,9 +87,9 @@ python3 -m mazeproof examples/multiple.json --format text
 画像検査と編集用作業ファイルの生成は、アプリ用環境で実行します。CLI から人間の承認は行いません。
 
 ```sh
-mazeproof inspect problem.png --solution solution.jpg --save-project work.mazeproof
-mazeproof inspect book.pdf --problem-page 1 --solution book.pdf --solution-page 2
-mazeproof inspect problem.png --reference examples/problem.json
+.venv/bin/mazeproof inspect problem.png --solution solution.jpg --save-project work.mazeproof
+.venv/bin/mazeproof inspect book.pdf --problem-page 1 --solution book.pdf --solution-page 2
+.venv/bin/mazeproof inspect problem.png --reference examples/problem.json
 ```
 
 `--settings settings.json` は `{"problem":{"geometry":{"x0":24,"y0":24,"x1":312,"y1":312,"cols":4,"rows":4},"rotation":0}}` の形式です。解答側は `solution` キーで独立に指定できます。保存先の既存ファイルは上書きしません。
@@ -85,7 +106,7 @@ mazeproof inspect problem.png --reference examples/problem.json
 ## ローカル MCP
 
 ```sh
-mazeproof mcp --allow-root /absolute/path/to/your/mazes
+.venv/bin/mazeproof mcp --allow-root /absolute/path/to/your/mazes
 ```
 
 stdio MCP の `validate_structure`、`inspect_file`、`validate_pair`、`inspect_batch`、`get_result` を提供します。ファイル指定は絶対パス、起動時に許可したディレクトリ内の通常ファイルだけ。URL・symlink・FIFO・ディレクトリ外を拒否します。書込み・外部送信・自動承認ツールはありません。画像の結果は常に確認待ちです。[設定と契約](docs/LOCAL_MCP.md) を参照。

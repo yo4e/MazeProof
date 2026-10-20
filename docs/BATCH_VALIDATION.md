@@ -1,6 +1,6 @@
 # 一括検品の検証記録
 
-2026-10-20。ローカルの `feat/local-image-workbench`、使い方ページ追加後の `46b7a93` から実装。公開・push・PR・mergeは行っていない。既存のChromeと作業中サーバーを操作せず、専用サーバーとヘッドレスChromiumで確認した。
+2026-10-20、`7400107` 実装時点の記録。ローカルの `feat/local-image-workbench`、使い方ページ追加後の `46b7a93` から実装。この記録時点では公開・push・PR・mergeを行っていなかった。後続のGitHub保全と最新CIの確認先は[リポジトリの状態](REPOSITORY_STATUS.md)を参照。既存のChromeと作業中サーバーを操作せず、専用サーバーとヘッドレスChromiumで確認した。
 
 ## 実装した動線
 

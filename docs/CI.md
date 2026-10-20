@@ -12,4 +12,4 @@
 
 ローカル手順は[README](../README.md)参照。UI証拠は`.evidence/`へ保存し、リポジトリやCI artifactへ自動公開しない。製品データはテストに使わない。
 
-これは設定された検査範囲の説明であり、この変更のremote CI実行済みを意味しない。Windows、全ブラウザ、任意画像に対する品質保証ではない。
+これは設定された検査範囲の説明。実行結果は[GitHub Actions](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml)またはPRのChecksで、対象のコミットSHAとともに確認する。`success` / `failure` / 未実行・実行中を分け、以前のmainの成功を新しいHEADの成功として扱わない。ブランチと試用版タグの位置付けは[リポジトリの状態](REPOSITORY_STATUS.md)を参照。Windows、全ブラウザ、任意画像に対する品質保証ではない。
