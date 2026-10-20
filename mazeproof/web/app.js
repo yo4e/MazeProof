@@ -1,3 +1,5 @@
+import { createBatchUI } from "/batch.js";
+
 const $ = (id) => document.getElementById(id);
 const clone = (value) => structuredClone(value);
 let token =
@@ -13,6 +15,7 @@ let state = null,
   undo = [],
   redo = [];
 let unsaved = false;
+let batchUI = null;
 let imageLoadSerial = 0;
 let serial = 0,
   controller = null,
@@ -54,6 +57,8 @@ const errors = {
   PDF_DECODE_FAILED:
     "このPDFは読み込めません。暗号化・破損や未対応形式の可能性があります。",
   GEOMETRY_NUMBER: "切り出し枠の数値を確認してください。",
+  WORKSPACE_LIMIT:
+    "保持できる作業量の上限です。一括作業を保存して件数を分けるか、不要な行を除いて再試行してください。",
 };
 function message(text) {
   $("message").textContent = text;
@@ -75,10 +80,14 @@ async function api(path, body, signal) {
     signal,
   });
   const data = await response.json();
-  if (!response.ok)
-    throw new Error(
+  if (!response.ok) {
+    const error = new Error(
       errors[data.error] || `処理を完了できませんでした (${data.error})`,
     );
+    error.code = data.error;
+    error.result = data.result;
+    throw error;
+  }
   return data;
 }
 function setBusy(value, cancellable = true) {
@@ -88,6 +97,7 @@ function setBusy(value, cancellable = true) {
   $("welcome").inert = value;
   $("workbench").inert = value;
   $("reset").disabled = value;
+  batchUI?.setBusy(value);
 }
 async function confirmAction(title, text) {
   $("dialog-title").textContent = title;
@@ -112,6 +122,7 @@ function invalidate() {
   dirty = true;
   unsaved = true;
   $("confirm-review").checked = false;
+  batchUI?.changed(state);
   renderResult();
 }
 function remember() {
@@ -141,6 +152,7 @@ async function display(next) {
   source = "problem";
   $("welcome").hidden = true;
   $("workbench").hidden = false;
+  batchUI?.displayed(next);
   $("confirm-review").checked = false;
   $("zoom").value = 100;
   $("work-title").textContent = "壁と解答を確かめる";
@@ -232,6 +244,7 @@ $("project-file").onchange = async () => {
   }
 };
 $("reset").onclick = async () => {
+  if (await batchUI?.reset()) return;
   if (
     state &&
     !(await confirmAction(
@@ -715,6 +728,7 @@ async function evaluate(approve = false) {
     });
     Object.assign(state, next);
     dirty = false;
+    batchUI?.updated(state);
     renderControls();
     renderResult();
     draw();
@@ -723,6 +737,7 @@ async function evaluate(approve = false) {
     state.result = null;
     state.approved = false;
     dirty = true;
+    batchUI?.changed(state);
     try {
       const sync = await api("state", { id: state.id });
       state.revision = sync.revision;
@@ -813,8 +828,45 @@ $("save-html").onclick = async () => {
     )}<h2>検証の詳細</h2><pre>${esc(JSON.stringify(result, null, 2))}</pre></html>`;
   download("mazeproof-report.html", html, "text/html");
 };
+batchUI = createBatchUI({
+  api,
+  readFile,
+  display,
+  evaluate,
+  download,
+  labels,
+  escape: esc,
+  fail,
+  message,
+  confirm: confirmAction,
+  state: () => state,
+  clear: () => {
+    state = null;
+    image = null;
+    imageLoadSerial++;
+    dirty = false;
+    undo = [];
+    redo = [];
+    unsaved = false;
+    $("workbench").hidden = true;
+  },
+});
+// Give the trusted, same-origin guide a tab-scoped copy of the current local
+// session, so its Home link works. Do not put the token in the guide URL or
+// persistent storage; sever the opener before loading the guide.
+$("help-link").onclick = (event) => {
+  event.preventDefault();
+  const guide = window.open("", "_blank");
+  if (!guide) {
+    message("使い方を開くには、このサイトの別タブ表示を許可してください。");
+    return;
+  }
+  if (token) guide.sessionStorage.setItem("mazeproof-token", token);
+  guide.opener = null;
+  guide.location.replace("/help");
+};
 window.addEventListener("beforeunload", (e) => {
-  if (state && unsaved) {
+  if (batchUI.hasWork() ? batchUI.hasUnsaved() : state && unsaved) {
     e.preventDefault();
     e.returnValue = "";
   }

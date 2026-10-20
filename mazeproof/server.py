@@ -12,14 +12,17 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from . import core
-from .workspace import Workspace
+from .workspace import Workspace, canonical
 
 MAX_BODY = 72 * 1024 * 1024
+MAX_WORKSPACES = 128
+MAX_STORED_BYTES = 192 * 1024 * 1024
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/help": ("help.html", "text/html; charset=utf-8"),
     "/help.css": ("help.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/batch.js": ("batch.js", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
 }
 
@@ -32,6 +35,7 @@ class LocalServer(ThreadingHTTPServer):
         super().__init__(address, Handler)
         self.token = secrets.token_urlsafe(32)
         self.workspaces = OrderedDict()
+        self.storage_costs = {}
         self.operation_lock = threading.Lock()
 
     @property
@@ -39,10 +43,24 @@ class LocalServer(ThreadingHTTPServer):
         return "http://127.0.0.1:" + str(self.server_address[1])
 
     def put(self, workspace):
+        # Never evict another maze's edits/approval to make room for a batch.
+        # Reserve for growth of routes and resolved-boundary lists as well as
+        # the serialized sources/observations. This is a storage budget, not an
+        # OS-enforced process RSS limit.
+        cost = len(
+            canonical({"sources": workspace.sources, **workspace.snapshot()}).encode()
+        ) + 128 * sum(
+            obs["model"]["width"] * obs["model"]["height"]
+            for obs in workspace.observations.values()
+        )
+        if (
+            len(self.workspaces) >= MAX_WORKSPACES
+            or sum(self.storage_costs.values()) + cost > MAX_STORED_BYTES
+        ):
+            raise core.Rejected("RESOURCE_LIMIT", "WORKSPACE_LIMIT")
         key = secrets.token_urlsafe(18)
         self.workspaces[key] = workspace
-        while len(self.workspaces) > 4:
-            self.workspaces.popitem(last=False)
+        self.storage_costs[key] = cost
         return {
             "id": key,
             "sources": workspace.sources,
@@ -181,6 +199,10 @@ class Handler(BaseHTTPRequestHandler):
             self.server.operation_lock.release()
 
     def dispatch(self, body):
+        if self.path == "/api/batch-item":
+            from .batch import inspect_item
+
+            return self.server.put(inspect_item(body))
         if self.path == "/api/import":
             core._keys(body, ("sources",), ("reference",))
             return self.server.put(Workspace(body["sources"], body.get("reference")))
@@ -210,6 +232,7 @@ class Handler(BaseHTTPRequestHandler):
             raise core.Rejected("INVALID_INPUT", "STALE_REVISION")
         if self.path == "/api/close":
             del self.server.workspaces[body["id"]]
+            self.server.storage_costs.pop(body["id"], None)
             return {"closed": True}
         if self.path == "/api/revoke":
             workspace.approved_digest = None
@@ -247,5 +270,6 @@ def main(argv=None):
         pass
     finally:
         server.workspaces.clear()
+        server.storage_costs.clear()
         server.server_close()
     return 0

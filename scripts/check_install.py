@@ -33,7 +33,7 @@ def main():
                 raise AssertionError("Installed server failed to start")
             parts = urlsplit(line.removeprefix("MazeProof: "))
             origin = parts.scheme + "://" + parts.netloc
-            assets = ("/", "/app.js", "/style.css", "/help", "/help.css")
+            assets = ("/", "/app.js", "/batch.js", "/style.css", "/help", "/help.css")
             for path in assets:
                 with urlopen(origin + path, timeout=10) as response:
                     assert response.status == 200 and len(response.read()) > 100
@@ -67,6 +67,11 @@ def main():
                 },
             )
             assert confirmed["result"]["overallStatus"] == "PASS"
+            exported = post(
+                "export", {"id": document["id"], "revision": confirmed["revision"]}
+            )
+            restored = post("batch-item", {"project": exported["project"]})
+            assert restored["result"]["overallStatus"] == "NEEDS_REVIEW"
             print(
                 json.dumps(
                     {
@@ -74,6 +79,7 @@ def main():
                         "staticAssets": len(assets),
                         "workerImageDecode": True,
                         "unconfirmedThenApproved": True,
+                        "batchRestoreRequiresReview": True,
                     },
                     indent=2,
                 )

@@ -2,6 +2,8 @@
 
 2026-10-20。基準main: `a72a669b81f3a7c81b40dc2965071799d1253f4d`。既存checkoutの変更はなく、別checkoutで実装した。remote mainの再確認でも同じcommitだった。push、PR、merge、release、デプロイは行っていない。
 
+これは基本アプリ実装時点の記録。後続の一括検品、使い方からトップへの移動、公式MCP SDKクライアント試験と最新の件数は[一括検品の検証記録](BATCH_VALIDATION.md)に追記した。以下の「複数ペア一括検品は未実装」は初回時点の制約。
+
 ## 実行環境
 
 macOS 27.0.1、arm64、Python 3.12.13、Node 22.22.0。アプリ依存はrequirements-app.txtに固定。専用headless Chromiumで1440×1100と390×844のviewportを確認した。Macの画面占有・操作は行っていない。

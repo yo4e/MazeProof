@@ -93,9 +93,142 @@
                 hidden
             /></label>
           </div>
+          <div class="batch-entry">
+            <button id="batch-start" type="button">複数まとめて検品</button>
+            <label class="link-button">
+              保存した一括作業を開く
+              <input
+                id="batch-project-file"
+                type="file"
+                accept=".mazeproof-batch,.json"
+                hidden
+              />
+            </label>
+          </div>
         </form>
       </section>
+      <section id="batch-setup" hidden aria-labelledby="batch-setup-title">
+        <p class="eyebrow">BATCH INSPECTION</p>
+        <h1 id="batch-setup-title">複数の迷路をまとめて読み込む</h1>
+        <p>
+          問題画像を複数選び、必要なら各行で解答を指定してください。ファイル名による自動ペア確定は行いません。
+        </p>
+        <p class="caption">
+          最大100件・選択した原画像の合計32MiBまで。PDFは各行でページを指定します。同じPDFの別ページは「行を複製」で追加できます。
+        </p>
+        <div class="batch-files card">
+          <label
+            >問題画像を追加（複数選択可）<input
+              id="batch-problems"
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf"
+              multiple
+          /></label>
+          <label
+            >解答画像を追加（任意・複数選択可）<input
+              id="batch-solutions"
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf"
+              multiple
+          /></label>
+        </div>
+        <div class="batch-table-wrap">
+          <table class="batch-table">
+            <caption>
+              問題・解答の組み合わせ
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">問題画像</th>
+                <th scope="col">問題ページ</th>
+                <th scope="col">解答画像</th>
+                <th scope="col">解答ページ</th>
+                <th scope="col">行の操作</th>
+              </tr>
+            </thead>
+            <tbody id="batch-draft-rows"></tbody>
+          </table>
+        </div>
+        <p id="batch-draft-count" role="status">問題画像を追加してください。</p>
+        <div class="row">
+          <button id="batch-run-new" class="primary" disabled>
+            この組み合わせで読み込む
+          </button>
+          <button id="batch-setup-back">トップへ戻る</button>
+        </div>
+      </section>
+      <section id="batch-list" hidden aria-labelledby="batch-title">
+        <div class="work-heading">
+          <div>
+            <p class="eyebrow">BATCH INSPECTION</p>
+            <h1 id="batch-title">一括検品の一覧</h1>
+          </div>
+          <span id="batch-total" class="badge review"></span>
+        </div>
+        <p>
+          「確認待ち」は人の照合が必要です。各行の「確認する」で壁・入口・出口を確認し、個別に承認してください。
+        </p>
+        <div class="batch-toolbar card">
+          <p id="batch-progress" role="status" aria-live="polite"></p>
+          <div class="row">
+            <button id="batch-resume" class="primary">未処理を読み込む</button>
+            <button id="batch-pause" hidden>一時停止</button>
+            <button id="batch-retry">エラーを再試行</button>
+          </div>
+          <div id="batch-counts" class="batch-counts"></div>
+          <label
+            >表示する項目
+            <select id="batch-filter">
+              <option value="all">すべて</option>
+              <option value="review">確認待ち</option>
+              <option value="suspect">暫定で違反あり</option>
+              <option value="error">読み取りエラー</option>
+              <option value="queued">未処理</option>
+              <option value="confirmed">承認済み</option>
+            </select></label
+          >
+        </div>
+        <div class="batch-table-wrap">
+          <table class="batch-table">
+            <caption>
+              各迷路の状態と操作
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">番号・問題 / 解答</th>
+                <th scope="col">状態</th>
+                <th scope="col">確認箇所・判定</th>
+                <th scope="col">操作</th>
+              </tr>
+            </thead>
+            <tbody id="batch-result-rows"></tbody>
+          </table>
+        </div>
+        <p id="batch-empty" hidden>該当する項目はありません。</p>
+        <div class="batch-toolbar card">
+          <p>
+            一括作業を保存すると、原画像・修正・未処理の項目をまとめて残せます。開き直すと全件を再認識し、承認はやり直します。
+          </p>
+          <div class="row">
+            <button id="batch-save" class="primary">一括作業を保存</button>
+            <button id="batch-report-json">一覧レポート JSON</button>
+            <button id="batch-report-html">一覧レポート HTML</button>
+          </div>
+        </div>
+      </section>
       <section id="workbench" hidden>
+        <nav
+          id="batch-review-nav"
+          class="batch-review-nav card"
+          aria-label="一括検品の移動"
+          hidden
+        >
+          <span id="batch-review-position"></span>
+          <div class="row">
+            <button id="batch-back">一覧へ戻る</button>
+            <button id="batch-next">次の確認待ち</button>
+          </div>
+        </nav>
         <div class="work-heading">
           <div>
             <p class="eyebrow">REVIEW WORKSPACE</p>

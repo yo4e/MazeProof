@@ -19,6 +19,7 @@
         <span>MazeProof<small>迷路の検品室</small></span>
       </div>
       <span class="local">使い方ガイド</span>
+      <a class="help-link" href="/" id="guide-home">トップへ戻る</a>
     </header>
     <main id="guide">
       <div class="guide-intro">
@@ -30,7 +31,8 @@
         </p>
         <p class="caption">
           検品を続けるときは、元の「MazeProof —
-          迷路の検品室」タブへ戻ってください。このページを開くだけでは、作業や承認は変わりません。
+          迷路の検品室」タブへ戻ってください。新しく始める場合は、右上の「トップへ戻る」から投入画面へ進めます。
+          元のタブの作業や承認は変わりません。
         </p>
         <aside class="guide-callout" aria-labelledby="waiting-title">
           <h2 id="waiting-title">いま「確認待ち」と出ている方へ</h2>
@@ -52,6 +54,7 @@
             <li><a href="#approve">承認して検証する</a></li>
             <li><a href="#results">判定を読む</a></li>
             <li><a href="#save">保存・再開する</a></li>
+            <li><a href="#batch">まとめて検品する</a></li>
           </ol>
           <a href="#trouble">困ったときは</a>
         </nav>
@@ -402,6 +405,66 @@
               保存ファイルは同じ名前でダウンロードされるため、どの迷路か分かる名前にしておくと便利です。
               画像は外部へ自動送信されません。作業ファイルと HTML
               レポートには画像が含まれるので、共有するときは内容を確認してください。
+            </p>
+          </section>
+          <section id="batch" aria-labelledby="batch-title">
+            <p class="eyebrow">BATCH INSPECTION</p>
+            <h2 id="batch-title">まとめて検品する</h2>
+            <p>
+              複数の迷路を読み込み、一覧から順に確認できます。
+              <strong>承認は1件ずつ行います。</strong
+              >読み込みが完了しても、まだ合格ではありません。
+            </p>
+            <ol>
+              <li>
+                投入画面の<strong>「複数まとめて検品」</strong>を押し、
+                <strong>「問題画像を追加」</strong>で複数のファイルを選びます。
+              </li>
+              <li>
+                解答がある場合は<strong>「解答画像を追加」</strong>で選び、
+                各行の解答欄から対応するファイルを指定します。ファイル名が似ていても自動では組み合わせません。
+              </li>
+              <li>
+                PDFは各行の問題・解答ページを指定します。同じPDFを複数組に使うときは<strong>「行を複製」</strong>し、ページ番号を変えます。
+              </li>
+              <li>
+                <strong>「この組み合わせで読み込む」</strong>を押します。
+                途中で止めるには<strong>「一時停止」</strong>。現在の1件が終わると止まり、完了分は残ります。
+                <strong>「未処理を読み込む」</strong>で続けられます。
+              </li>
+              <li>
+                一覧の<strong>「確認する」</strong>から重ね表示を確認・修正し、承認します。
+                <strong>「一覧へ戻る」「次の確認待ち」</strong
+                >で移動できます。移動しても各迷路の修正は残ります。
+              </li>
+            </ol>
+            <div class="guide-note">
+              <h3>エラーや暫定の違反があるとき</h3>
+              <p>
+                「表示する項目」で絞り込めます。1件を読めなくても、ほかの迷路の処理は続きます。
+                ファイルを直して<strong>「問題を差し替え」</strong>などで選び直し、未処理を読み込んでください。
+                差し替えた行の修正と承認は取り消されます。PDFの差し替えは1ページ目になるため、別ページを使う場合は新しい一括検品で指定します。
+              </p>
+            </div>
+            <h3>一覧ごと保存して再開する</h3>
+            <p>
+              一覧下部の<strong>「一括作業を保存」</strong>で、
+              原画像・各迷路の修正・未処理の項目を<code>.mazeproof-batch</code>にまとめます。
+              投入画面の<strong>「保存した一括作業を開く」</strong>から再開し、
+              「未処理を読み込む」で全件を再認識します。<strong
+                >保存されていた承認は引き継ぎません。</strong
+              >
+            </p>
+            <p>
+              <strong>「一覧レポート JSON」「一覧レポート HTML」</strong
+              >には各件の結果・確認待ち・エラーを残せます。
+              レポートは再開用のファイルではありません。個別画面の「作業を保存」はその1件だけの保存です。
+            </p>
+            <p class="caption">
+              1回に100件、原画像の合計32MiBまで。一括作業ファイルは128MiBまでです。
+              同じPDFや解答を複数行に指定した場合も、行ごとに容量を数えます。
+              途中で保持量の上限に達したら、一括作業を保存してから件数を分けてください。
+              自動保存はないため、画面を閉じる前にダウンロードを確認してください。
             </p>
           </section>
           <section id="trouble" aria-labelledby="trouble-title">

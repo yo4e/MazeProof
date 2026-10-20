@@ -12,6 +12,7 @@ from pathlib import Path
 from . import core
 from .worker import run
 from .workspace import Workspace
+from .batch import inspect_many
 
 MAX_LINE = 40 * 1024 * 1024
 
@@ -136,6 +137,39 @@ TOOLS = [
         ),
     },
     {
+        "name": "inspect_batch",
+        "description": "Inspect 1-100 explicitly paired local maze items independently. Errors do not stop other items. All image results remain unapproved. Time/output budgets may leave QUEUED items: resubmit those IDs and original inputs. No files are written.",
+        "inputSchema": object_schema(
+            {
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 100,
+                    "items": object_schema(
+                        {
+                            "id": {"type": "string", "minLength": 1, "maxLength": 128},
+                            "problem": {"type": "string"},
+                            "solution": {"type": "string"},
+                            "problem_page": {"type": "integer", "minimum": 1},
+                            "solution_page": {"type": "integer", "minimum": 1},
+                            "problem_geometry": {"type": "object"},
+                            "solution_geometry": {"type": "object"},
+                            "problem_rotation": {"enum": [0, 90, 180, 270]},
+                            "solution_rotation": {"enum": [0, 90, 180, 270]},
+                            "reference": {
+                                "type": "string",
+                                "description": "Optional exact structure JSON string, not a path",
+                            },
+                            "unique_required": {"type": "boolean"},
+                        },
+                        ["id", "problem"],
+                    ),
+                },
+            },
+            ["items"],
+        ),
+    },
+    {
         "name": "get_result",
         "description": "Read one of the last eight results in this process by request ID.",
         "inputSchema": object_schema({"requestId": {"type": "string"}}, ["requestId"]),
@@ -180,6 +214,8 @@ class MCP:
             return self.results[arguments["requestId"]]
         if name == "validate_structure":
             result = run("structure", arguments)
+        elif name == "inspect_batch":
+            result = inspect_many(arguments["items"], self.load_batch_item)
         else:
             sources = {}
             roles = ("problem",) if name == "inspect_file" else ("problem", "solution")
@@ -219,6 +255,35 @@ class MCP:
         while len(self.results) > 8:
             self.results.popitem(last=False)
         return response
+
+    def load_batch_item(self, item):
+        schema = next(t for t in TOOLS if t["name"] == "inspect_batch")["inputSchema"][
+            "properties"
+        ]["items"]["items"]
+        core._keys(
+            item,
+            schema["required"],
+            tuple(set(schema["properties"]) - set(schema["required"])),
+        )
+        if "unique_required" in item and type(item["unique_required"]) is not bool:
+            raise core.Rejected("INVALID_INPUT", "POLICY_TYPE")
+        sources = {}
+        for role in ("problem", "solution"):
+            if role not in item:
+                continue
+            path = item[role]
+            data = self.reader.read(path)
+            sources[role] = {
+                "name": Path(path).name,
+                "data": base64.b64encode(data).decode(),
+            }
+            for option in ("page", "geometry", "rotation"):
+                if role + "_" + option in item:
+                    sources[role][option] = item[role + "_" + option]
+        spec = {"sources": sources, "uniqueRequired": item.get("unique_required", True)}
+        if "reference" in item:
+            spec["reference"] = core._decode(item["reference"])[0]
+        return spec
 
     def handle(self, message):
         if (

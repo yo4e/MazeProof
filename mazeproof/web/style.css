@@ -118,6 +118,125 @@ header {
   align-items: center;
   gap: 12px;
 }
+.batch-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.batch-entry .link-button {
+  font-size: 12px;
+}
+.batch-files,
+.batch-toolbar,
+.batch-review-nav {
+  padding: 20px 24px;
+  margin: 20px 0;
+}
+.batch-files {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.batch-files label {
+  min-width: 0;
+}
+.batch-files input {
+  max-width: 100%;
+}
+.batch-toolbar p {
+  margin: 0 0 14px;
+  line-height: 1.8;
+}
+.batch-toolbar .row,
+.batch-review-nav .row {
+  flex-wrap: wrap;
+}
+.batch-counts {
+  margin: 20px 0;
+  line-height: 2;
+  font-weight: 600;
+}
+.batch-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 24px 0;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.batch-table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+}
+.batch-table caption {
+  text-align: left;
+  color: #61766e;
+  padding: 12px 16px;
+  font-size: 12px;
+}
+.batch-table th,
+.batch-table td {
+  padding: 14px 16px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.batch-table th[scope="row"] {
+  max-width: 260px;
+  min-width: 150px;
+}
+.batch-table td:last-child {
+  min-width: 175px;
+}
+.batch-table small {
+  display: block;
+  font-weight: 400;
+  line-height: 1.8;
+  margin-top: 6px;
+}
+.batch-table input[type="number"] {
+  width: 70px;
+}
+.batch-table select {
+  max-width: 220px;
+}
+.batch-table button,
+.batch-file-button {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+.batch-file-button input {
+  width: 170px;
+  font-size: 10px;
+}
+.batch-review-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.batch-review-nav > span {
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+@media (max-width: 740px) {
+  .batch-files {
+    grid-template-columns: 1fr;
+  }
+  .batch-files,
+  .batch-toolbar,
+  .batch-review-nav {
+    padding: 16px;
+  }
+}
 .help-link {
   color: var(--green);
   font-weight: 600;

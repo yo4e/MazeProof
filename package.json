@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "format": "prettier --write mazeproof/web",
-    "check": "prettier --check mazeproof/web && node --check mazeproof/web/app.js"
+    "check": "prettier --check mazeproof/web && node --check mazeproof/web/app.js && node --check mazeproof/web/batch.js"
   },
   "devDependencies": {"prettier": "3.6.2"}
 }

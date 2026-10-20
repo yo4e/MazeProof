@@ -122,7 +122,7 @@ class LocalTests(unittest.TestCase):
         replies = [json.loads(line) for line in result.stdout.splitlines()]
         self.assertEqual(len(replies), 3)
         self.assertEqual(replies[0]["result"]["protocolVersion"], "2025-06-18")
-        self.assertEqual(len(replies[1]["result"]["tools"]), 4)
+        self.assertEqual(len(replies[1]["result"]["tools"]), 5)
         parsed = json.loads(replies[2]["result"]["content"][0]["text"])["result"]
         exact = core.validate_structure(json.dumps(demo_model()))
         self.assertEqual(parsed["checks"], exact["checks"])
