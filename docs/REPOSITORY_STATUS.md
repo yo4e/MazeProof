@@ -2,19 +2,19 @@
 
 2026-10-21更新。GitHub: [yo4e/MazeProof](https://github.com/yo4e/MazeProof)。
 
-## 使うブランチ
+## GitHubに残すブランチ
 
 | ブランチ | 位置付け |
 | --- | --- |
 | `main` | 本体、操作体験デモ、最新の公開文書を含む開発・配信元。通常の利用はReleaseの導入セットから始める |
-| `feat/local-image-workbench` | PR #5でmainに統合済み。既存のローカル検品環境に対応する作業ブランチとして残している |
-| `feat/static-demo` | PR #6でmainに統合済み。デモのローカル作業場所に対応するブランチとして残している。公開デモの配信元はmain |
+
+統合済みの作業ブランチはGitHub上から整理し、通常は `main` だけを残す。手元の `feat/local-image-workbench` と `feat/static-demo`、その作業フォルダや起動中の検品サーバーはそのまま保全している。手元で使い続けるために、同じ名前のリモートブランチを残す必要はない。公開デモの配信元も `main` である。
 
 既存の3コミット（`ec61a46` 基本アプリ、`46b7a93` 使い方、`7400107` 一括検品）を履歴ごと保全して、PR #5をmainへ統合済み。操作体験デモはPR #6で追加した。統合の状態・時刻・コミットは[PR #5](https://github.com/yo4e/MazeProof/pull/5)・[PR #6](https://github.com/yo4e/MazeProof/pull/6)で確認できる。文書整備などの一時作業ブランチは、完了後に整理する。
 
-[導入手順](../README.md) · [mainとの差分](https://github.com/yo4e/MazeProof/compare/main...feat/local-image-workbench) · [PR一覧](https://github.com/yo4e/MazeProof/pulls)
+[導入手順](../README.md) · [本体の統合内容](https://github.com/yo4e/MazeProof/pull/5/files) · [PR一覧](https://github.com/yo4e/MazeProof/pulls)
 
-以下の4ブランチは、2026-10-21にリモートから削除済み。全コミットがmainの履歴に含まれ、固有の未マージ変更がないこと、配信元や使用中の作業場所ではないことを確認して整理した。削除前の先端と履歴の控えも保全した。変更内容と統合履歴は各PRから参照でき、必要な場合はPRのRestore branchで復元できる。タグやReleaseは削除・移動していない。
+以下の6ブランチは、2026-10-21にリモートから削除済み。全コミットがmainの履歴に含まれ、固有の未マージ変更、開いているPR、配信に必要なリモート参照がないことを確認して整理した。削除前の先端と履歴の控えも保全した。変更内容と統合履歴は各PRから参照でき、必要な場合はPRのRestore branchで復元できる。ローカルブランチ・作業フォルダや、タグ・Release・配布物は削除・移動していない。
 
 | ブランチ | マージ済みPR |
 | --- | --- |
@@ -22,6 +22,8 @@
 | `feat/structure-validation-core` | [#2 構造検証コア](https://github.com/yo4e/MazeProof/pull/2) |
 | `chore/license-support-ci` | [#3 ライセンスとCI](https://github.com/yo4e/MazeProof/pull/3) |
 | `feat/json-cli` | [#4 JSON CLI](https://github.com/yo4e/MazeProof/pull/4) |
+| `feat/local-image-workbench` | [#5 画像・一括検品アプリ](https://github.com/yo4e/MazeProof/pull/5) |
+| `feat/static-demo` | [#6 操作体験デモ](https://github.com/yo4e/MazeProof/pull/6) |
 
 ## バージョンとタグ
 
