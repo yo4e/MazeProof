@@ -15,6 +15,12 @@ from playwright.sync_api import expect, sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def capture(page, path):
+    # Full-page captures otherwise place sticky UI at the current scroll offset.
+    page.evaluate('window.scrollTo(0, 0)')
+    page.screenshot(path=str(path), full_page=True)
+
+
 def exercise(url, output):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
@@ -48,7 +54,7 @@ def exercise(url, output):
         expect(page.locator('#report')).to_be_hidden()
         page.locator('#reset').click()
         expect(page.locator('#result')).to_be_hidden()
-        page.screenshot(path=str(output / 'desktop.png'), full_page=True)
+        capture(page, output / 'desktop.png')
 
         for case, failures in [('wall', 3), ('gap', 1)]:
             page.locator(f'[data-case={case}]').click()
@@ -70,7 +76,7 @@ def exercise(url, output):
                 expect(page.locator('#source-label')).to_have_text('用意した修正後の画像')
             page.locator('#report-button').click()
             expect(page.locator('#report')).to_be_visible()
-            page.screenshot(path=str(output / f'{case}-corrected.png'), full_page=True)
+            capture(page, output / f'{case}-corrected.png')
             page.locator('#reset').click()
             expect(page.locator('#result')).to_be_hidden()
             expect(page.locator('#report')).to_be_hidden()
@@ -101,7 +107,7 @@ def exercise(url, output):
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.locator('#result').scroll_into_view_if_needed()
         assert page.locator('.demo-banner').bounding_box()['y'] == 0
-        page.screenshot(path=str(output / 'mobile.png'), full_page=True)
+        capture(page, output / 'mobile.png')
         page.locator('#advance').click()
         assert page.locator('.checks .failed').count() == 0
         for width in (320, 768, 1024):
