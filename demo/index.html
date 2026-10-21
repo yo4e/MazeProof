@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="迷路の画像を読み取り、目で確かめる。MazeProofの検品の流れを、3つの合成サンプルで体験できます。"
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>MazeProof — 迷路の検品を体験する</title>
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#workbench">操作体験へ移動</a>
+    <div class="demo-banner">
+      <strong>操作体験用デモ</strong
+      ><span>合成サンプル専用です。お手元の画像の検品はローカル版で。</span>
+    </div>
+    <header class="site-header shell">
+      <a class="brand" href="./" aria-label="MazeProof デモの最初へ"
+        ><img src="./icon.svg" alt="" width="34" height="34" />MazeProof<span
+          >迷路の検品</span
+        ></a
+      >
+      <a
+        class="header-link"
+        href="https://github.com/yo4e/MazeProof/releases/tag/v0.2.0"
+        >ローカル版 v0.2.0 ↗</a
+      >
+    </header>
+    <main class="shell">
+      <section class="intro" aria-labelledby="intro-title">
+        <div>
+          <p class="eyebrow">READ · REVIEW · CHECK</p>
+          <h1 id="intro-title">迷路を読み取り、<br />目で確かめる。</h1>
+        </div>
+        <div class="intro-copy">
+          <p>
+            画像から読み取った壁は、原画像と合っている？<br
+              class="desktop-break"
+            />赤い解答線は、途中で切れていない？
+          </p>
+          <p>
+            まずは3つの例で、<strong>見比べる → 直す → 結果を見る</strong
+            >を体験してください。
+          </p>
+        </div>
+      </section>
+      <section id="workbench" class="workbench" aria-label="サンプルの検品体験">
+        <aside class="sample-list" aria-labelledby="choose-title">
+          <p class="eyebrow">STEP 01</p>
+          <h2 id="choose-title">サンプルを選ぶ</h2>
+          <p class="muted small">
+            何件でも、何度でも。<br />操作はこの画面の中だけです。
+          </p>
+          <div id="sample-buttons" class="sample-buttons">
+            <button class="sample" data-case="normal" aria-pressed="true">
+              <span class="sample-no">01</span
+              ><span
+                ><strong>問題のない例</strong
+                ><small>壁と解答線を見比べる</small></span
+              ><span class="sample-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="sample" data-case="wall" aria-pressed="false">
+              <span class="sample-no">02</span
+              ><span
+                ><strong>壁を確認する例</strong
+                ><small>読み取りの間違いに気づく</small></span
+              ><span class="sample-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="sample" data-case="gap" aria-pressed="false">
+              <span class="sample-no">03</span
+              ><span
+                ><strong>赤線が途切れた例</strong
+                ><small>解答画像の不備を見つける</small></span
+              ><span class="sample-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div class="sample-note">
+            <span aria-hidden="true">↳</span>
+            <p>
+              実際の一括検品でも、一覧から1件ずつ画像を確認します。デモではファイルの追加はできません。
+            </p>
+          </div>
+        </aside>
+        <div class="inspection">
+          <div class="inspection-heading">
+            <div>
+              <p class="eyebrow">STEP 02 · 見比べる</p>
+              <h2 id="case-title">問題のない例</h2>
+            </div>
+            <button id="reset" class="text-button" type="button">
+              ↺ この例を最初から
+            </button>
+          </div>
+          <p id="case-description" class="case-description">読み込み中です。</p>
+          <div class="toolbar" role="group" aria-label="画像の表示設定">
+            <div class="segmented">
+              <button id="problem" aria-pressed="false">問題画像</button
+              ><button id="solution" aria-pressed="true">解答画像</button>
+            </div>
+            <label class="toggle"
+              ><input
+                id="overlay"
+                type="checkbox"
+                checked
+              />読み取りを重ねる</label
+            >
+            <button id="zoom" class="zoom-button" aria-pressed="false">
+              注目箇所を拡大
+            </button>
+          </div>
+          <div class="image-grid">
+            <figure>
+              <figcaption>
+                <span>原画像</span
+                ><small id="source-label">合成した解答画像</small>
+              </figcaption>
+              <canvas
+                id="original"
+                width="674"
+                height="674"
+                role="img"
+                aria-label="原画像。詳しい確認箇所は画像の下に説明しています。"
+              ></canvas>
+            </figure>
+            <figure>
+              <figcaption>
+                <span>読み取りの例</span
+                ><small id="overlay-label">色を重ねて照合</small>
+              </figcaption>
+              <canvas
+                id="recognized"
+                width="674"
+                height="674"
+                role="img"
+                aria-label="壁と通り道を重ねた画像。詳しい確認箇所は画像の下に説明しています。"
+              ></canvas>
+            </figure>
+          </div>
+          <div class="legend" aria-label="画像の色の説明">
+            <span><i class="wall-key"></i>黒：元の壁</span
+            ><span><i class="read-key"></i>青緑：読み取った壁</span
+            ><span><i class="route-key"></i>紫の点線：通り道</span
+            ><span><i class="focus-key"></i>①：見る場所</span>
+          </div>
+          <div class="look-note">
+            <span class="number" aria-hidden="true">1</span>
+            <div>
+              <h3 id="look-title"></h3>
+              <p id="look-description"></p>
+            </div>
+          </div>
+          <div class="action-row">
+            <p id="action-help"></p>
+            <button id="advance" class="primary" type="button">
+              この例の結果を見る <span aria-hidden="true">→</span>
+            </button>
+          </div>
+          <section
+            id="result"
+            class="result"
+            aria-labelledby="result-title"
+            hidden
+          >
+            <p class="eyebrow">STEP 03 · 結果の例</p>
+            <h3 id="result-title" tabindex="-1"></h3>
+            <p id="result-description"></p>
+            <dl id="checks" class="checks"></dl>
+            <p class="scope-note">
+              これは決められたサンプルの構造を計算した結果例です。この画面では画像の検査や人の承認を行っていません。
+            </p>
+            <button
+              id="report-button"
+              class="text-button"
+              aria-expanded="false"
+              aria-controls="report"
+            >
+              人に渡すレポートの例を読む ↓
+            </button>
+            <div id="report" class="report" hidden>
+              <h4>確認担当の方へ</h4>
+              <p id="report-text"></p>
+              <p>
+                実際の検品では、注目箇所以外も含めて画像全体を確かめてください。確認後に入力や壁を変更した場合は、もう一度確認が必要です。
+              </p>
+            </div>
+          </section>
+          <p class="example-scope">
+            すべて説明用に作った画像です。読み取りの例は決められた状態を再現しており、自動認識の精度を示すものではありません。
+          </p>
+          <p
+            id="announcement"
+            class="sr-only"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </div>
+      </section>
+      <section class="next-step" aria-labelledby="next-title">
+        <div>
+          <p class="eyebrow">自分の画像で使うには</p>
+          <h2 id="next-title">検品は、自分のPCで。</h2>
+          <p>
+            PNG・JPEG・PDFを読み込み、必要なところを修正。<br />人が確認してから検査し、作業と結果を保存できます。
+          </p>
+        </div>
+        <div class="next-actions">
+          <a
+            class="primary"
+            href="https://github.com/yo4e/MazeProof/blob/v0.2.0/README.md"
+            >ローカル版の導入方法 <span aria-hidden="true">↗</span></a
+          ><a
+            class="secondary"
+            href="https://github.com/yo4e/MazeProof/blob/v0.2.0/docs/LOCAL_MCP.md"
+            >AIから使うための接続方法 ↗</a
+          >
+          <p>
+            Mac / Linux・Python 3.12以上<br />画像・一括検品版は試用版です。
+          </p>
+        </div>
+      </section>
+      <section class="difference" aria-label="デモとローカル版の違い">
+        <div>
+          <h3>このデモでできること</h3>
+          <p>
+            用意した3例の比較・拡大、決まった修正例の表示、結果とレポートの例の閲覧。
+          </p>
+        </div>
+        <div>
+          <h3>ローカル版でできること</h3>
+          <p>
+            自分の画像の読取り、自由な修正と再検査、最大100件の一括検品、作業の保存・再開。AI接続は別に設定します。
+          </p>
+        </div>
+        <div>
+          <h3>人に残る、大切な確認</h3>
+          <p>
+            画像の読取りは完全ではありません。合格は、人が確認した壁と通り道に対する結果です。
+          </p>
+        </div>
+      </section>
+    </main>
+    <footer class="shell">
+      <span>MazeProof · 合成サンプルによる操作体験</span
+      ><a href="https://github.com/yo4e/MazeProof">ソースコード ↗</a>
+    </footer>
+    <noscript
+      ><p class="noscript">
+        操作体験にはJavaScriptが必要です。ローカル版の導入方法は上のリンクからご覧いただけます。
+      </p></noscript
+    >
+  </body>
+</html>

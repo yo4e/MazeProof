@@ -2,7 +2,9 @@
 
 迷路の問題画像と、赤い解答線を描いた画像を見比べるためのローカルアプリです。壁や入口・出口を確認し、必要なところを直してから、道がつながるか、解答が1通りか、赤線が壁を横切っていないかを検査します。PNG・JPEG、PDFの指定ページに対応しています。
 
-**画像・一括検品は試用版（0.2.0）です。** 画像の読み間違いがないかは人の確認が必要です。確認する前に画像を合格扱いすることはありません。確認後の合格も、確認した壁・通り道に対する結果です。正式リリースではありません。
+**画像・一括検品は試用版（0.2.0）です。** [GitHub Release](https://github.com/yo4e/MazeProof/releases/tag/v0.2.0)で公開しています。画像の読み間違いがないかは人の確認が必要です。確認する前に画像を合格扱いすることはありません。確認後の合格も、確認した壁・通り道に対する結果です。
+
+**導入前に画面を試す： [操作体験デモ](https://yo4e.github.io/MazeProof/)**。合成サンプル3例で画像の比較・拡大、決まった修正例、結果とレポートの例を体験できます。デモは自分の画像を検査するアプリではありません。自分の画像の読取り・修正・保存やAI接続は、以下のローカル版を使います。[デモの構成と検証方法](docs/STATIC_DEMO.md)。
 
 [![CI](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml?query=branch%3Amain)
 
@@ -33,7 +35,7 @@ python3.12 -m venv .venv
 .venv/bin/python -m pip install .
 ```
 
-この手順は画像版を含むmain向けです。[PR #5](https://github.com/yo4e/MazeProof/pull/5)の取り込み前に試す場合だけ、最初の行を `git clone --branch feat/local-image-workbench https://github.com/yo4e/MazeProof.git` に置き換えてください。古い試用版タグは過去の版を固定したものなので、最新の導入には使いません。
+この手順は画像版を含むmain向けです。公開済みの版に固定するなら、最初の行を `git clone --branch v0.2.0 https://github.com/yo4e/MazeProof.git` に置き換えてください。デモサイトの追加は、本体の `v0.2.0` タグを変更しません。
 
 ### 起動する
 
