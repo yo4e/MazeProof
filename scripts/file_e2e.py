@@ -38,7 +38,7 @@ def large_pair(folder):
     paths = []
     for role in ("problem", "solution"):
         path = folder / (role + "-large.png")
-        image = render(model, route if role == "solution" else None, cell=10, margin=8, thickness=3)
+        image = render(model, route if role == "solution" else None, cell=11, margin=8, thickness=3)
         image.save(path, compress_level=0)
         image.close()
         assert path.stat().st_size < 25 * 1024**2
@@ -139,7 +139,7 @@ async def main():
             await page.locator("#dialog-yes").click()
             await expect(page.locator("#welcome")).to_be_visible()
 
-            # 250x250, long red route, many uncertain boundaries, ~18MiB each.
+            # 250x250, long red route, many uncertain boundaries, ~22MiB each.
             # No decoder mocks or result injection. This failed at 72MiB before.
             large_problem, large_solution = large_pair(folder)
             await page.locator("#problem-file").set_input_files(str(large_problem))
@@ -154,7 +154,7 @@ async def main():
                 await page.locator("#tab-" + role).click()
                 if not await page.locator("#grid-details").evaluate("e=>e.open"):
                     await page.locator("#grid-details summary").click()
-                for key, value in {"cols": 250, "rows": 250, "x0": 8, "y0": 8, "x1": 2508, "y1": 2508}.items():
+                for key, value in {"cols": 250, "rows": 250, "x0": 8, "y0": 8, "x1": 2758, "y1": 2758}.items():
                     await page.locator("#" + key).fill(str(value))
                 async with page.expect_response("**/api/import-claim", timeout=180000) as claimed:
                     await page.locator("#reanalyze").click()
@@ -165,10 +165,11 @@ async def main():
             await expect(page.locator("#rows")).to_have_value("250")
             large = folder / "large.mazeproof"
             await save(large)
-            assert 72 * 1024**2 < large.stat().st_size <= MAX_PROJECT_BYTES
             old = next(iter(server.workspaces.values()))
             digest = old.digest()
             sizes = {"sourceBytes": [p.stat().st_size for p in (large_problem, large_solution)], "savedBytes": large.stat().st_size, "limit": MAX_PROJECT_BYTES, "routeLength": len(old.edits["solution"]["model"]["route"]), "unknowns": len(old.observations["solution"]["unknowns"])}
+            print(json.dumps({"largeSave": sizes}), flush=True)
+            assert 72 * 1024**2 < large.stat().st_size <= MAX_PROJECT_BYTES, sizes
             assert sizes["routeLength"] == 62500 and sizes["unknowns"] > 60000
             await page.locator("#message").evaluate("e=>{e.textContent='';e.hidden=true;}")
             await page.locator("#project-file").set_input_files(str(large))
