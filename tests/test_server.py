@@ -78,6 +78,7 @@ class ServerTests(unittest.TestCase):
         # The guide is readable without a private session and remains local.
         # It must not need a workspace or weaken the API's authentication.
         for path, mime in (
+            ("/batch", "text/html"),
             ("/help", "text/html"),
             ("/help.css", "text/css"),
         ):

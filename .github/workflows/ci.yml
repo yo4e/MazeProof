@@ -45,6 +45,12 @@ jobs:
           npm run check
       - name: Verify change whitespace
         run: git diff --check HEAD^ HEAD
+      - name: Build and verify a clean wheel installation
+        run: |
+          python -m build --no-isolation
+          python -m venv .evidence/install-venv
+          .evidence/install-venv/bin/python -m pip install dist/*.whl
+          python scripts/check_install.py --python "$PWD/.evidence/install-venv/bin/python"
 
   browser:
     name: Headless workflow

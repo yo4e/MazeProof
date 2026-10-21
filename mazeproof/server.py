@@ -8,6 +8,7 @@ import re
 import secrets
 import threading
 import time
+import webbrowser
 from collections import OrderedDict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -26,6 +27,7 @@ IMPORT_PATHS = {"/api/import", "/api/demo", "/api/restore", "/api/batch-item"}
 IMPORT_CONTROLS = {"/api/import-claim", "/api/import-cancel"}
 STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
+    "/batch": ("index.html", "text/html; charset=utf-8"),
     "/help": ("help.html", "text/html; charset=utf-8"),
     "/help.css": ("help.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
@@ -397,6 +399,16 @@ class Handler(BaseHTTPRequestHandler):
         return {"id": body["id"], **workspace.snapshot(), "result": result}
 
 
+def _open_browser(url):
+    """Best-effort launch; never delay serving or expose a failed command/token."""
+    try:
+        opened = webbrowser.open(url, new=2)
+    except Exception:
+        opened = False
+    if not opened:
+        print("ブラウザを開けませんでした。上に表示されたURLを手動で開いてください。", flush=True)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Run MazeProof on localhost; open the printed private URL."
@@ -404,17 +416,23 @@ def main(argv=None):
     parser.add_argument(
         "--port", type=int, default=0, help="Loopback port (0 chooses a free port)"
     )
+    parser.add_argument("--batch", action="store_true", help="Start at the batch input screen")
+    parser.add_argument("--open-browser", action="store_true", help="Open a new browser tab (otherwise print the URL only)")
     args = parser.parse_args(argv)
     try:
         server = LocalServer(("127.0.0.1", args.port))
     except OSError:
         parser.exit(3, "Unable to bind the local port. Choose another --port.\n")
-    print("MazeProof: " + server.origin + "/#" + server.token, flush=True)
+    url = server.origin + ("/batch#" if args.batch else "/#") + server.token
+    print("MazeProof: " + url, flush=True)
     print(
-        "Local only. Keep this URL private. Ctrl+C to stop and clear the session.",
+        "このURLはこの起動中だけ有効です。共有せずに使ってください。\n"
+        "終了前に画面で作業を保存し、このターミナルで Ctrl+C を押してください。",
         flush=True,
     )
     try:
+        if args.open_browser:
+            threading.Thread(target=_open_browser, args=(url,), daemon=True).start()
         server.serve_forever(poll_interval=0.25)
     except KeyboardInterrupt:
         pass

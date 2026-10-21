@@ -22,7 +22,7 @@ def main():
         if "site-packages" not in module:
             raise AssertionError("Expected an installed package")
         server = subprocess.Popen(
-            [args.python, "-m", "mazeproof", "serve"],
+            [args.python, "-I", "-m", "mazeproof", "serve", "--batch"],
             cwd=working,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -33,8 +33,9 @@ def main():
             if not line.startswith("MazeProof: "):
                 raise AssertionError("Installed server failed to start")
             parts = urlsplit(line.removeprefix("MazeProof: "))
+            assert parts.path == "/batch" and parts.fragment
             origin = parts.scheme + "://" + parts.netloc
-            assets = ("/", "/app.js", "/batch.js", "/style.css", "/help", "/help.css")
+            assets = ("/", "/batch", "/app.js", "/batch.js", "/style.css", "/help", "/help.css")
             for path in assets:
                 with urlopen(origin + path, timeout=10) as response:
                     assert response.status == 200 and len(response.read()) > 100
@@ -85,6 +86,7 @@ def main():
                 json.dumps(
                     {
                         "installedOutsideRepository": True,
+                        "batchEntryUrl": True,
                         "staticAssets": len(assets),
                         "workerImageDecode": True,
                         "unconfirmedThenApproved": True,

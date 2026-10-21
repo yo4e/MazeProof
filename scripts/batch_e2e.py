@@ -95,6 +95,25 @@ def main():
                 page.locator("#dialog-yes").click()
                 expect(page.locator("#welcome")).to_be_visible()
 
+            # A launcher URL enters batch setup directly, with a usable private
+            # session. A new tab must not reset the original page or server.
+            launch_page = context.new_page()
+            launch_page.goto(url.replace("/#", "/batch#"))
+            expect(launch_page.locator("#batch-setup")).to_be_visible()
+            expect(launch_page.locator("#welcome")).not_to_be_visible()
+            assert "#" not in launch_page.url
+            launch_page.locator("#batch-problems").set_input_files(paths[0])
+            launch_page.locator("#batch-run-new").click()
+            expect(launch_page.locator("#batch-counts")).to_contain_text(
+                "確認待ち 1", timeout=45000
+            )
+            expect(page.locator("#welcome")).to_be_visible()
+            launch_page.locator("#reset").click()
+            launch_page.locator("#dialog-yes").click()
+            expect(launch_page.locator("#welcome")).to_be_visible()
+            launch_page.close()
+            checks.append("Launcher entry opens batch setup and imports with a valid session")
+
             new_batch(paths[:5] + [str(broken), str(faint_path), str(blocked)])
             page.locator("#batch-solutions").set_input_files(str(solution))
             expect(page.locator("#batch-draft-count")).to_contain_text("解答あり 0")

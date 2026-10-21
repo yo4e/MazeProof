@@ -2,6 +2,7 @@ import { createBatchUI } from "/batch.js";
 
 const $ = (id) => document.getElementById(id);
 const clone = (value) => structuredClone(value);
+const startInBatch = location.pathname === "/batch";
 let token =
   location.hash.slice(1) || sessionStorage.getItem("mazeproof-token") || "";
 if (location.hash) {
@@ -920,4 +921,5 @@ window.addEventListener("beforeunload", (e) => {
     e.returnValue = "";
   }
 });
+if (startInBatch) $("batch-start").click();
 if (!token) message(errors.LOCAL_SESSION_REQUIRED);

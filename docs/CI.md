@@ -6,6 +6,8 @@
 - 画像/PDFのdecode・認識・承認・取消・保存復元・構造参照との比較
 - workerの時間/RSS上限、MCP stdio handshake、allowed-root逸脱とsymlink拒否
 - loopback HTTPのHost/Origin/token検査、競合、エラー復帰
+- 起動ファイルのパス移植性、ブラウザ起動の明示指定と失敗時の復帰
+- wheel/source archiveの生成と新規仮想環境への導入、ソース外からの一括入口・画像処理・保存復元
 - 結果schema、サンプル、Python構文・内部リンク、Ruff、JavaScript構文、Prettier
 - 別jobで専用headless Chromiumを使った単一・一括UI一連操作（100件、停止・保存再開、承認取消、エラー復帰）
 - レビュー回帰UI（未同期undo、遅延・失敗する保存、受付後の取消、受領確認の応答欠落）
