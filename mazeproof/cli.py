@@ -61,7 +61,17 @@ def _render_text(result):
 
 
 def main(argv=None):
-    parser = Parser(prog="mazeproof", description="Validate local structured maze JSON; images/PDF are unsupported.")
+    actual = sys.argv[1:] if argv is None else argv
+    if actual and actual[0] in ("serve", "inspect", "mcp"):
+        command = actual[0]
+        if command == "serve":
+            from .server import main as command_main
+        elif command == "mcp":
+            from .mcp import main as command_main
+        else:
+            from .commands import inspect_main as command_main
+        return command_main(actual[1:])
+    parser = Parser(prog="mazeproof", description="Validate structure JSON. Other commands: serve (local UI), inspect (images/PDF), mcp (stdio).")
     parser.add_argument("problem", help="Local problem JSON file; may contain a route if --solution is omitted")
     parser.add_argument("--solution", help="Local complete solution maze JSON with route")
     parser.add_argument("--allow-multiple", action="store_true", help="Allow multiple paths; still require reachability and a valid supplied route")

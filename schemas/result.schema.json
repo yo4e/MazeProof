@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "MazeProof exact structure result v1 (local)",
+  "title": "MazeProof verification result v1",
   "type": "object",
   "properties": {
     "schemaVersion": {
@@ -62,6 +62,22 @@
         "maxSeconds": {
           "type": "integer",
           "minimum": 1
+        },
+        "maxPixels": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxPages": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxMemoryBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxAdapterSeconds": {
+          "type": "integer",
+          "minimum": 1
         }
       }
     },
@@ -70,18 +86,42 @@
     },
     "recognition": {
       "type": "object",
-      "properties": {
-        "status": {
-          "const": "NOT_APPLICABLE"
-        },
-        "assurance": {
-          "const": "exact_structure"
-        }
-      },
       "required": [
         "status",
         "assurance"
       ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_APPLICABLE",
+            "NEEDS_REVIEW",
+            "CONFIRMED"
+          ]
+        },
+        "assurance": {
+          "enum": [
+            "exact_structure",
+            "recognized_unconfirmed",
+            "human_confirmed"
+          ]
+        },
+        "modelDigest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "pending": {
+          "type": "array"
+        },
+        "statement": {
+          "type": "string"
+        },
+        "referenceDigest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
       "additionalProperties": false
     },
     "checks": {

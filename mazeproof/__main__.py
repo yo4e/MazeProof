@@ -1,4 +1,5 @@
-"""python -m mazeproof: local, read-only structured JSON validation."""
+"""python -m mazeproof: JSON, images, local UI, and MCP."""
 from .cli import main
 
-raise SystemExit(main())
+if __name__ == "__main__":
+    raise SystemExit(main())

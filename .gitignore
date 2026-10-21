@@ -1,3 +1,17 @@
 __pycache__/
 *.py[cod]
 .venv/
+*.egg-info/
+build/
+dist/
+.evidence/
+.playwright/
+node_modules/
+
+# Local inspection work and downloaded reports may contain source images.
+*.mazeproof
+*.mazeproof-batch
+mazeproof-report.json
+mazeproof-report.html
+mazeproof-batch-report.json
+mazeproof-batch-report.html

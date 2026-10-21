@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mazeproof"
+version = "0.2.0"
+description = "Local, review-first maze inspection workbench"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = ["Pillow==13.0.0", "numpy==2.5.4", "pypdfium2==5.14.0", "psutil==7.2.2"]
+
+[project.scripts]
+mazeproof = "mazeproof.cli:main"
+
+[tool.setuptools.package-data]
+mazeproof = ["web/*"]
+
+[tool.setuptools.packages.find]
+include = ["mazeproof*"]
+
+[tool.ruff.lint.per-file-ignores]
+"mazeproof/core.py" = ["E731"]
+"tests/test_core.py" = ["E731", "F841"]
+"tests/check_schemas.py" = ["E402"]

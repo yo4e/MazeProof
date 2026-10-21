@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="MazeProofで迷路を読み込み、壁と解答を確認し、検証・保存するまでの使い方。"
+    />
+    <title>使い方 — MazeProof</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/help.css" />
+  </head>
+  <body class="help-page">
+    <a class="skip-link" href="#guide">本文へ進む</a>
+    <header>
+      <div class="brand">
+        <span class="mark" aria-hidden="true">▦</span>
+        <span>MazeProof<small>迷路の検品室</small></span>
+      </div>
+      <span class="local">使い方ガイド</span>
+      <a class="help-link" href="/" id="guide-home">トップへ戻る</a>
+    </header>
+    <main id="guide">
+      <div class="guide-intro">
+        <p class="eyebrow">MAZEPROOF GUIDE</p>
+        <h1>はじめての迷路検品</h1>
+        <p class="guide-lead">
+          画像を読み込む。読み取った壁を目で確かめる。<br />
+          確認した迷路を検証して、結果を残しましょう。
+        </p>
+        <p class="caption">
+          検品を続けるときは、元の「MazeProof —
+          迷路の検品室」タブへ戻ってください。新しく始める場合は、右上の「トップへ戻る」から投入画面へ進めます。
+          元のタブの作業や承認は変わりません。
+        </p>
+        <aside class="guide-callout" aria-labelledby="waiting-title">
+          <h2 id="waiting-title">いま「確認待ち」と出ている方へ</h2>
+          <p>
+            <strong>あなたが原画像と照合する段階です。</strong>
+            処理は終わっており、待つだけでは進みません。壁・入口・出口などを確認し、画面下部のチェックを入れて
+            <strong>「確認を承認して検証」</strong>を押します。
+          </p>
+          <a href="#approve">チェックの場所と承認の手順を見る →</a>
+        </aside>
+      </div>
+      <div class="guide-layout">
+        <nav class="guide-nav" aria-label="使い方の目次">
+          <p>このページの内容</p>
+          <ol>
+            <li><a href="#input">画像を用意する</a></li>
+            <li><a href="#review">重ね表示を確かめる</a></li>
+            <li><a href="#correct">読み取りを修正する</a></li>
+            <li><a href="#approve">承認して検証する</a></li>
+            <li><a href="#results">判定を読む</a></li>
+            <li><a href="#save">保存・再開する</a></li>
+            <li><a href="#batch">まとめて検品する</a></li>
+          </ol>
+          <a href="#trouble">困ったときは</a>
+        </nav>
+        <article class="guide-content" aria-label="検品の手順">
+          <section id="input" aria-labelledby="input-title">
+            <p class="eyebrow">STEP 01</p>
+            <h2 id="input-title">画像を用意する</h2>
+            <p>
+              矩形の格子に沿った、白い通路・黒い壁の迷路が対象です。PNG / JPEG
+              または PDF
+              を使えます。曲線の迷路や斜めから撮った写真には対応していません。
+            </p>
+            <ol>
+              <li><strong>「問題画像」</strong>で迷路のファイルを選びます。</li>
+              <li>
+                解答も調べたい場合は、<strong>「解答画像」</strong>に同じ迷路へ赤い解答線を描いたファイルを選びます。
+                問題と解答の向き・行列数をそろえてください。
+              </li>
+              <li>
+                PDF は<strong>「PDF の問題ページ」「PDF の解答ページ」</strong
+                >にそれぞれページ番号を入力します。 1 ページ目は「1」。同じ PDF
+                の別ページも選べます。
+              </li>
+              <li><strong>「画像を読み込む」</strong>を押します。</li>
+            </ol>
+            <div class="guide-note">
+              <h3>問題画像だけでも使えます</h3>
+              <p>
+                入口から出口へ行けるか、道順がひとつかを調べられます。解答画像は必須ではありません。
+                解答画像がないと「解答の合法性」「問題・解答の一致」は未検査になります。
+              </p>
+            </div>
+            <p>
+              手元に画像がなければ<strong>「合成サンプルで試す」</strong>から練習できます。
+              元の構造データを持っている場合は、投入時に<strong
+                >「元の構造 JSON とも照合する」</strong
+              >を開いて指定できます。通常の画像検品には不要です。
+            </p>
+          </section>
+          <section id="review" aria-labelledby="review-title">
+            <p class="eyebrow">STEP 02</p>
+            <h2 id="review-title">重ね表示を確かめる</h2>
+            <p>
+              <strong>重ね表示</strong>は、原画像の上に「MazeProof
+              が読み取った迷路」を描くことです。
+              この読み取った迷路を、判定では<strong>モデル</strong>と呼びます。
+              原画像とモデルが同じかどうかを、人が確かめます。
+            </p>
+            <ul class="guide-legend">
+              <li><span class="teal-dot">青緑</span>：読み取った壁</li>
+              <li>
+                <span class="orange-dot">橙色</span>：読み取りに自信がない境界
+              </li>
+              <li><span class="red-dot">赤</span>：読み取った解答線</li>
+              <li><strong>S / G</strong>：入口 / 出口</li>
+            </ul>
+            <p>
+              画像の上にある<strong>「壁・解答の重ね表示」</strong>をオフにすると原画像だけを見られます。
+              オン・オフを切り替え、<strong>「拡大」</strong>も使って、次を順に照合してください。
+            </p>
+            <ol>
+              <li>
+                <strong>格子と外周。</strong
+                >マスの行・列の数が合っているか。認識した外周が迷路の外周に重なっているか。
+              </li>
+              <li>
+                <strong>壁と通路。</strong
+                >黒い壁があるのに読み取られていない場所、通路なのに壁として扱われた場所がないか。
+              </li>
+              <li>
+                <strong>入口と出口。</strong>S と G
+                が意図した入口・出口に付いているか。外周に余分な穴がないか。
+              </li>
+              <li>
+                <strong>解答画像があるとき。</strong
+                >左側の<strong>「問題」「解答」</strong>を切り替えて、両方の壁と入口・出口を確認します。
+                解答側では、読み取った赤線が原画像の道順と合い、途切れ・分岐・余分な線がないかも確認します。
+              </li>
+            </ol>
+            <p class="guide-note">
+              <strong
+                >「読み取りの確認箇所」が 0
+                でも、全体の目視確認は必要です。</strong
+              >
+              0
+              は自動で見つけた不確かな箇所が残っていないという意味で、読み取りが正しい保証ではありません。
+            </p>
+          </section>
+          <section id="correct" aria-labelledby="correct-title">
+            <p class="eyebrow">STEP 03</p>
+            <h2 id="correct-title">読み取りを修正する</h2>
+            <p>
+              原画像と違うところだけ、左側の<strong>「修正ツール」</strong>で直します。
+              修正は読み取ったモデルに反映され、元の画像ファイルは変わりません。
+            </p>
+            <dl class="guide-definitions">
+              <dt>橙色の境界</dt>
+              <dd>
+                <strong>「読み取りの確認箇所」</strong
+                >の項目を押して場所を選び、原画像と照合します。
+                読み取りが合っていれば<strong>「境界を確認」</strong>を選び、画像上のその境界をクリックします。
+                違っていれば<strong>「壁を反転」</strong>でその境界をクリックし、壁と通路を切り替えます。
+                どちらも確認済みになります。問題・解答の両方で残りを 0
+                にしてください。
+                赤線で壁が隠れているなど、原画像から判断できない場合は、推測で承認せず、確認できる画像を用意してください。
+              </dd>
+              <dt>細かくてクリックしにくい境界</dt>
+              <dd>
+                <strong>「座標で境界を編集」</strong
+                >を開き、向き・行・列を指定して<strong>「確認」</strong>または<strong>「壁を反転」</strong>を押します。
+                行・列は 0
+                から数えます。確認箇所の一覧から選ぶと、この座標が自動で入ります。
+              </dd>
+              <dt>入口・出口の位置が違う</dt>
+              <dd>
+                <strong>「入口」</strong
+                >または<strong>「出口」</strong>を選び、画像上の外周の境界をクリックします。
+                壁の開閉は自動で変わりません。必要なら<strong>「壁を反転」</strong>で元の開口を閉じ、新しい位置を開けてください。
+              </dd>
+              <dt>格子全体がずれている・画像が横向き</dt>
+              <dd>
+                <strong>「格子・切り出し・回転」</strong>を開き、行・列の数と左
+                x / 上 y / 右 x / 下 y を直して
+                <strong>「この格子で再認識」</strong
+                >を押します。座標は画像内のピクセル位置で、外周の壁の中心に合わせます。
+                横向きなら<strong>「右へ90°回転・再推定」</strong>を使います。再認識すると壁・解答線の修正と承認は取り消されるので、先に格子を整えます。
+              </dd>
+              <dt>解答線の読み取りが違う</dt>
+              <dd>
+                <strong>「解答」</strong
+                >タブで<strong>「解答線を消して描き直す」</strong>を押し、
+                <strong>「解答をなぞる」</strong
+                >を選んで入口から出口までマスの中心を順にクリックします。
+                最後のマスをもう一度クリックすると一歩戻ります。順序だけが逆なら<strong>「解答の向きを反転」</strong>を使います。
+                原画像と照合した後、<strong>「赤線の連続性・全体を確認した」</strong>にチェックします。
+              </dd>
+            </dl>
+            <p>
+              編集を間違えたら<strong>「↶ 元に戻す」「↷ やり直す」</strong
+              >を使えます。
+              確認箇所が多い場合は<strong>「次の確認箇所」</strong>で一覧の続きを表示します。
+            </p>
+          </section>
+          <section id="approve" aria-labelledby="approve-title">
+            <p class="eyebrow">STEP 04</p>
+            <h2 id="approve-title">承認して検証する</h2>
+            <p>
+              承認は<strong>「この読み取りが原画像に合っている」と人が確認する操作</strong>です。
+              正解の迷路だと宣言する操作ではありません。到達性や壁横断などは、その後に
+              MazeProof が検証します。
+            </p>
+            <ol>
+              <li>
+                原画像との照合と修正を終え、<strong>「読み取りの確認箇所」</strong>を
+                0 にします。
+                解答線の確認を求められている場合は、解答側の<strong>「赤線の連続性・全体を確認した」</strong>にもチェックします。
+              </li>
+              <li>
+                <strong>画面下部の操作バー</strong
+                >で、道順をひとつに限定したい場合は
+                <strong>「唯一解を必須にする」</strong>をオンのままにします。
+              </li>
+              <li>
+                同じバーの<strong>「問題・解答の格子、壁、入口出口、解答線を原画像と照合した」</strong>にチェックします。
+                問題画像だけを入れた場合は、問題の格子・壁・入口・出口の照合で進めます。解答画像を追加する必要はありません。
+              </li>
+              <li>
+                同じバーの<strong>「確認を承認して検証」</strong>を押し、<strong>「検証結果」</strong>を読みます。
+                操作バーが見えなければ下へスクロールしてください。
+              </li>
+            </ol>
+            <div class="guide-note">
+              <h3>確認の途中で計算結果を見たいとき</h3>
+              <p>
+                <strong>「暫定チェック」</strong
+                >を使います。読み取った現在のモデルで検査をやり直しますが、人の承認は行いません。
+                まだ承認していなければ、総合表示は<strong>「確認待ち」</strong>のままです。
+              </p>
+            </div>
+            <p>
+              承認後に壁・入口出口・解答線・検証方針などを変更すると、<strong>「変更あり・再確認」</strong>になります。
+              元に戻す操作でも承認は復活しません。変更後の状態を照合し、もう一度承認してください。
+            </p>
+          </section>
+          <section id="results" aria-labelledby="results-title">
+            <p class="eyebrow">STEP 05</p>
+            <h2 id="results-title">判定を読む</h2>
+            <dl class="guide-definitions">
+              <dt>確認待ち</dt>
+              <dd>
+                画像の認識が終わり、人の照合・承認を待っている状態です。待つだけでは進みません。
+              </dd>
+              <dt>PASS（暫定） / FAIL（暫定）</dt>
+              <dd>
+                未承認のモデルで計算した各検査の結果です。読み取りが違っている可能性があるため、
+                この表示だけで検品完了とは判断しません。
+              </dd>
+              <dt>条件付き PASS</dt>
+              <dd>
+                人が確認・承認したモデルについて、指定した検査の条件を満たしました。
+                <strong
+                  >「原画像とモデルが一致している」という人の確認が条件</strong
+                >です。
+                認識の見落としや人の確認ミスまで排除した証明ではなく、元の画像・印刷物の完全な正しさを保証しません。
+                未検査の項目が残っていても表示されるので、各項目も読んでください。
+              </dd>
+              <dt>FAIL</dt>
+              <dd>
+                承認したモデルに、到達不能・別解・壁横断などの条件違反があります。
+                理由と<strong>「反例・差分・未検査の範囲」</strong>を見て、まず原画像との一致を確認します。
+                原画像も同じなら、迷路や解答そのものを制作側で直す必要があります。
+              </dd>
+              <dt>未検査</dt>
+              <dd>
+                必要な入力がないなどの理由で、その検査を行っていません。合格という意味ではありません。
+              </dd>
+            </dl>
+            <div
+              class="guide-table-wrap"
+              tabindex="0"
+              role="region"
+              aria-label="検証項目の説明"
+            >
+              <table>
+                <caption>
+                  「検証結果」の各項目で調べること
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">画面の項目</th>
+                    <th scope="col">意味と範囲</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">入口から出口</th>
+                    <td>壁を通り抜けずに入口から出口へ到達できるか。</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">唯一解</th>
+                    <td>
+                      同じマスを繰り返し通らない道順が、入口から出口までひとつか。「唯一解を必須にする」をオフにすると、複数の道順があっても合格になり得ます。
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">解答の合法性</th>
+                    <td>
+                      読み取った解答が入口から出口までつながり、壁横断などの違反がないか。解答画像が必要です。
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">問題・解答の一致</th>
+                    <td>
+                      両方の格子・壁・入口出口が同じか。解答画像が必要です。
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">構造JSONとの一致</th>
+                    <td>
+                      問題から読み取った格子・壁・入口出口が、別途指定した元の構造
+                      JSON と同じか。
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              PDF
+              で調べるのは指定ページの<strong>描画された見た目</strong>です。
+              PDF
+              内部のベクターデータとの一致や、選んでいないページは検証しません。
+            </p>
+          </section>
+          <section id="save" aria-labelledby="save-title">
+            <p class="eyebrow">STEP 06</p>
+            <h2 id="save-title">保存・再開する</h2>
+            <p>
+              <strong>自動保存はありません。</strong
+              >画面を再読み込みする前、閉じる前、別の検品に移る前に、
+              画面下部の<strong>「作業を保存」</strong>を押します。確認の途中でも保存できます。
+              ブラウザのダウンロード先にファイルが保存されたことを確認してください。
+            </p>
+            <div
+              class="guide-table-wrap"
+              tabindex="0"
+              role="region"
+              aria-label="保存ファイルの違い"
+            >
+              <table>
+                <caption>
+                  用途に合わせて保存する
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">ボタン</th>
+                    <th scope="col">保存するもの</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">作業を保存</th>
+                    <td>
+                      <code>mazeproof-work.mazeproof</code
+                      >。原画像・修正・設定を含む、作業を再開するためのファイル。
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">レポート HTML</th>
+                    <td>
+                      ブラウザで読める検査結果。画像と判定の詳細を含みます。
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">レポート JSON</th>
+                    <td>
+                      他のツールでも扱える検査結果。未承認なら暫定結果として保存されます。
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">構造 JSON</th>
+                    <td>
+                      表示中の「問題」または「解答」のモデル。作業全体を再開するファイルではありません。
+                    </td>
+                  </tr>
+                  <tr>
+                    <th scope="row">重ね画像 PNG</th>
+                    <td>
+                      表示中の画像。重ね表示がオフなら、重ねた壁・解答線は含まれません。
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <h3>続きから再開するには</h3>
+            <ol>
+              <li>
+                すでに検品画面なら、必要な作業を保存してから<strong>「新しい検品」</strong>を押し、確認画面で<strong>「続ける」</strong>を選ぶと投入画面に戻れます。
+              </li>
+              <li>
+                投入画面で<strong>「保存した作業を開く」</strong>を押し、保存した
+                <code>.mazeproof</code> ファイルを選びます。
+              </li>
+              <li>
+                修正した内容が戻ります。<strong>承認は引き継がれません。</strong>もう一度原画像と照合して承認してください。
+              </li>
+            </ol>
+            <p>
+              保存ファイルは同じ名前でダウンロードされるため、どの迷路か分かる名前にしておくと便利です。
+              画像は外部へ自動送信されません。作業ファイルと HTML
+              レポートには画像が含まれるので、共有するときは内容を確認してください。
+            </p>
+          </section>
+          <section id="batch" aria-labelledby="batch-title">
+            <p class="eyebrow">BATCH INSPECTION</p>
+            <h2 id="batch-title">まとめて検品する</h2>
+            <p>
+              複数の迷路を読み込み、一覧から順に確認できます。
+              <strong>承認は1件ずつ行います。</strong
+              >読み込みが完了しても、まだ合格ではありません。
+            </p>
+            <ol>
+              <li>
+                投入画面の<strong>「複数まとめて検品」</strong>を押し、
+                <strong>「問題画像を追加」</strong>で複数のファイルを選びます。
+              </li>
+              <li>
+                解答がある場合は<strong>「解答画像を追加」</strong>で選び、
+                各行の解答欄から対応するファイルを指定します。ファイル名が似ていても自動では組み合わせません。
+              </li>
+              <li>
+                PDFは各行の問題・解答ページを指定します。同じPDFを複数組に使うときは<strong>「行を複製」</strong>し、ページ番号を変えます。
+              </li>
+              <li>
+                <strong>「この組み合わせで読み込む」</strong>を押します。
+                途中で止めるには<strong>「一時停止」</strong>。現在の1件が終わると止まり、完了分は残ります。
+                <strong>「未処理を読み込む」</strong>で続けられます。
+              </li>
+              <li>
+                一覧の<strong>「確認する」</strong>から重ね表示を確認・修正し、承認します。
+                <strong>「一覧へ戻る」「次の確認待ち」</strong
+                >で移動できます。移動しても各迷路の修正は残ります。
+              </li>
+            </ol>
+            <div class="guide-note">
+              <h3>エラーや暫定の違反があるとき</h3>
+              <p>
+                「表示する項目」で絞り込めます。1件を読めなくても、ほかの迷路の処理は続きます。
+                ファイルを直して<strong>「問題を差し替え」</strong>などで選び直し、未処理を読み込んでください。
+                差し替えた行の修正と承認は取り消されます。PDFの差し替えは1ページ目になるため、別ページを使う場合は新しい一括検品で指定します。
+              </p>
+            </div>
+            <h3>一覧ごと保存して再開する</h3>
+            <p>
+              一覧下部の<strong>「一括作業を保存」</strong>で、
+              原画像・各迷路の修正・未処理の項目を<code>.mazeproof-batch</code>にまとめます。
+              投入画面の<strong>「保存した一括作業を開く」</strong>から再開し、
+              「未処理を読み込む」で全件を再認識します。<strong
+                >保存されていた承認は引き継ぎません。</strong
+              >
+            </p>
+            <p>
+              <strong>「一覧レポート JSON」「一覧レポート HTML」</strong
+              >には各件の結果・確認待ち・エラーを残せます。
+              レポートは再開用のファイルではありません。個別画面の「作業を保存」はその1件だけの保存です。
+            </p>
+            <p class="caption">
+              1回に100件、原画像の合計32MiBまで。一括作業ファイルは128MiBまでです。
+              同じPDFや解答を複数行に指定した場合も、行ごとに容量を数えます。
+              途中で保持量の上限に達したら、一括作業を保存してから件数を分けてください。
+              自動保存はないため、画面を閉じる前にダウンロードを確認してください。
+            </p>
+          </section>
+          <section id="trouble" aria-labelledby="trouble-title">
+            <p class="eyebrow">WHEN YOU NEED HELP</p>
+            <h2 id="trouble-title">困ったときは</h2>
+            <dl class="guide-definitions">
+              <dt>「確認を承認して検証」が押せない</dt>
+              <dd>
+                画面下部の照合チェックが入っているか、問題・解答の両方に未確認の橙色境界が残っていないかを確認します。
+                解答側の赤線確認も必要な場合があります。<a href="#approve"
+                  >承認の手順</a
+                >を順に確認してください。
+              </dd>
+              <dt>承認時に入口・出口や開口の修正を求められる</dt>
+              <dd>
+                入口・出口の指定と、外周の壁の開閉を確認してください。承認できる形になるまで、モデルの不正を先に直す必要があります。
+                <strong>「暫定チェック」</strong>で理由を確認できます。
+              </dd>
+              <dt>読み込みをやめたい・別の画像でやり直したい</dt>
+              <dd>
+                読み込み中は<strong>「取り消す」</strong>を押せます。別の画像を入れるには、必要な作業を保存して
+                <strong>「新しい検品」</strong
+                >へ進みます。置き換えの確認画面で<strong>「戻る」</strong>を押せば作業を続けられます。
+              </dd>
+              <dt>画像を読めない・「上限に達しました」と出る</dt>
+              <dd>
+                画面の理由を確認し、対応する PNG / JPEG / PDF でやり直します。1
+                ファイル 25 MiB、 描画後 2,000 万画素、PDF は 20
+                ページまでです。暗号化 PDF は読めません。
+                余白の切り出しや小さなファイルで試す場合も、細い壁が消えないことを確認してください。
+              </dd>
+              <dt>再読み込み・サーバー終了で作業が消えた</dt>
+              <dd>
+                保存した
+                <code>.mazeproof</code>
+                ファイルを開き直してください。保存していなければ原画像からやり直します。
+                「起動時に表示された専用URLから開き直してください」と出た場合は、サーバー起動時の
+                URL を使います。
+              </dd>
+            </dl>
+            <p class="guide-back"><a href="#guide">ページの先頭へ ↑</a></p>
+          </section>
+        </article>
+      </div>
+    </main>
+    <footer>
+      MazeProof 0.2 · 使い方
+      <span>検品を続けるときは、元のタブへ戻ってください</span>
+    </footer>
+  </body>
+</html>

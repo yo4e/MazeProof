@@ -1,92 +1,201 @@
 # MazeProof
 
-自作迷路と解答を検査する、独立したローカルアプリを開発するリポジトリ。
-人間向け UI、CLI、MCP が同じ検証コアと結果 schema を使い、構造データと完成品の PNG / JPEG（JPG）/ PDF を検査する。
+迷路の問題画像と、赤い解答線を描いた画像を見比べるためのローカルアプリです。壁や入口・出口を確認し、必要なところを直してから、道がつながるか、解答が1通りか、赤線が壁を横切っていないかを検査します。PNG・JPEG、PDFの指定ページに対応しています。
 
-**構造 JSON の検証コアと CLI を実装済み。画像認識・UI・MCP サーバーは未実装。**
-画像からの認識とグラフ上の数学的判定を分離し、認識が不確かな完成品を無条件に PASS としない。
+**画像・一括検品は試用版（0.2.0）です。** 画像の読み間違いがないかは人の確認が必要です。確認する前に画像を合格扱いすることはありません。確認後の合格も、確認した壁・通り道に対する結果です。正式リリースではありません。
 
-- [設計仕様](docs/SPEC.md)：対象範囲、データ契約、判定と確認フロー
-- [段階 BUILD_PLAN](docs/BUILD_PLAN.md)：順序、受入条件、人間の確認ゲート
-- [検証方針](docs/VALIDATION.md)：独立 solver、故障注入、golden tests
-- [未決事項・依存候補](docs/DECISIONS.md)：技術選定、ライセンス、公開境界
+[![CI](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml?query=branch%3Amain)
 
-MazeMa の非公開商品データをこの公開リポジトリへコピーしない。公開テストは独立した synthetic fixtures を使う。
-名前は仮称。事前の簡易検索では目立つ同名アプリ・OSS は見つかっていないが、商標確認済みではない。
+## 使い方を選ぶ
 
-## CLI で JSON を検証する
+| やりたいこと | 使うもの |
+| --- | --- |
+| 自分で画像を見て、修正・確認・保存したい | 下の「人が画面で使う」を参照。ブラウザで使います |
+| たくさんの迷路を順番に確認したい | 同じ画面の「複数まとめて検品」。Mac用の起動ファイルも同梱しています |
+| AIに検査を頼み、確認すべき場所をまとめてほしい | [AIから使うMCPの接続手順](docs/LOCAL_MCP.md)。人が使う画面とは別の接続です |
 
-Python 3.9+、外部の実行時依存なし。repo root で次を実行すると、問題と解答を読み取り専用で検査し、共通schemaのJSON結果をstdoutへ返す。
+## 人が画面で使う
+
+### 前提環境
+
+- MacまたはLinux、Python **3.12以上**、Gitが必要です。MacではChromeを使って動作確認しています。LinuxはCIで検査しています。Windowsと全ブラウザでの動作は未確認です。
+- 初回の取得・インストールにはインターネット接続が必要です。起動後の画像処理はこのPC内で行います。通常の利用にNode.jsやMCPの登録は必要ありません。
+- Pythonのコマンド名は環境によって異なります。下の `python3.12` が見つからない場合は、Python 3.12以上を導入して、その実行コマンドに置き換えてください。
+
+### 初回の導入
+
+ターミナルで、置きたい場所へ移動してから順に実行します。
+
+```sh
+git clone https://github.com/yo4e/MazeProof.git
+cd MazeProof
+python3.12 -m venv .venv
+.venv/bin/python -m pip install .
+```
+
+この手順は画像版を含むmain向けです。[PR #5](https://github.com/yo4e/MazeProof/pull/5)の取り込み前に試す場合だけ、最初の行を `git clone --branch feat/local-image-workbench https://github.com/yo4e/MazeProof.git` に置き換えてください。古い試用版タグは過去の版を固定したものなので、最新の導入には使いません。
+
+### 起動する
+
+**Mac：** 初回の導入が済んだら、取得した `MazeProof` フォルダ内の **[MazeProof一括検品を開く.command](MazeProof一括検品を開く.command)** をダブルクリックします。一括検品の入力画面が新しいタブで開きます。ターミナルのウィンドウは、検品中は開いたままにします。起動ファイルだけを別の場所へ移動せず、フォルダ内に置いて使ってください。
+
+**ターミナルから使う場合（Mac / Linux）：** 同じフォルダで次を実行します。
+
+```sh
+.venv/bin/python -I -m mazeproof serve --batch --open-browser
+```
+
+1件ずつ使うトップ画面から始めるなら `--batch` を外します。「合成サンプルで試す」もトップ画面にあります。一括画面の「トップへ戻る」で移動できます。
+
+ブラウザを自動で開かずに起動する場合は、`--open-browser` を外してください。ターミナルに表示された専用URLをブラウザで開けます。URLは起動するたびに変わり、その起動中だけ有効です。後半には接続用の秘密が含まれるので、共有する資料には載せないでください。
+
+起動ファイルは、置いてあるフォルダの `.venv` から導入済みアプリを起動します。個人の保存場所や固定ポート、保存済みの接続URLは使いません。実行するたびに新しい空の作業を始めます。既存のサーバーを探して終了したり、作業タブを再読込したりはしません。
+
+### 保存場所・終了・再開
+
+**終了前に、画面で作業を保存してください。自動保存はありません。**
+
+| 保存するもの | ボタンとファイル | 用途 |
+| --- | --- | --- |
+| 複数の迷路の作業全体 | 「一括作業を保存」→ `.mazeproof-batch` | 原画像・修正・未処理の画像をまとめて再開する |
+| 1件だけの作業 | 「作業を保存」→ `.mazeproof` | その1件の原画像と修正を再開する |
+| 検査の結果 | 一覧・個別のJSON / HTMLレポート | 結果を読む・共有する。作業の再開用ファイルとは別 |
+
+ファイルはブラウザのダウンロード先に保存されます。通常は「ダウンロード」フォルダですが、ブラウザの設定によっては保存先を選びます。MazeProofのフォルダへ自動保存されるわけではありません。画像や作業ファイルは、Gitで管理するリポジトリとは別の作業用フォルダに保管すると整理しやすくなります。
+
+1. 保存ファイルがダウンロードされたことを確かめます。一括検品では、1件だけの保存ではなく「一括作業を保存」を使います。
+2. 起動したターミナルで **Ctrl+C** を押して終了します。未保存の画像・修正・一覧は失われます。ブラウザの再読込やタブを閉じる前にも保存してください。
+3. 次回は起動ファイル、または同じ起動コマンドを使います。初回のインストールは不要です。
+4. トップ画面の「保存した一括作業を開く」から保存ファイルを選び、「未処理を読み込む」で再開します。一括入力画面からは「トップへ戻る」で移動できます。単一作業は「保存した作業を開く」を使います。
+
+保存した作業を開くと、画像を読み直し、人による確認もやり直します。以前の合格表示をそのまま使い回すことはありません。修正した内容は作業ファイルから復元されます。
+
+### 新しい版へ更新する
+
+先に未保存の作業を保存し、自分が起動したサーバーをCtrl+Cで終了してください。そのあと、変更を加えていないmainのフォルダで次を実行します。
+
+```sh
+git pull --ff-only
+.venv/bin/python -m pip install .
+```
+
+再度起動ファイルを開くと、導入し直した版を使えます。Gitの取得だけでは、導入済みアプリや起動中のサーバーは更新されません。複数の起動がある場合、ほかの作業のサーバーを終了する必要はありません。保存済み作業を新しい画面へ読み込んで再開します。
+
+### 起動できないとき
+
+- 「初回準備がまだ完了していません」と出る：READMEと起動ファイルが同じフォルダにあり、その場所で `.venv` の作成とインストールを終えたか確認します。
+- ダブルクリックで実行できない：ターミナルでそのフォルダへ移動し、上の起動コマンドを使います。OSの保護設定を無効にする必要はありません。
+- ブラウザが開かない：ターミナルに表示されたURLを手動で開きます。ブラウザを開けなくてもサーバーは動き続けます。
+- 古いURLで接続できない：今動いている起動のURLを使います。再起動前のURLや、使い方ページのURLだけでは検品できません。
+- 固定ポートを使いたい：起動コマンドに `--port 8765` を追加します。使用中なら別の番号を選ぶか、指定を外します。通常は空いているポートを自動で選びます。
+
+## 検品の流れ
+
+画面上部の **「使い方」** から、画像の選び方・重ね表示・承認・判定の意味・保存と再開を説明するガイドが別タブで開きます。検品中の状態はそのまま保たれます。[ガイドのソース](mazeproof/web/help.html)はアプリに同梱され、外部通信なしで読めます。
+
+1. 問題画像と、任意の解答画像を選ぶ。PDF は問題と解答のページ番号をそれぞれ指定する。同じ PDF も選べます。「合成サンプルで試す」ならファイルは不要です。
+2. 格子の行列数と外周位置を確認する。違う場合は「格子・切り出し・回転」で数値を直して再認識する。外周枠の座標は**壁の中心**です。
+3. 原画像に重ねた壁を確認する。壁・通路の反転、入口出口の指定、赤線の描き直しができます。入口・出口を変えても外周の壁は自動変更しません。橙色の不確かな境界は個別に確認または修正します。
+4. 「暫定チェック」で不正な開口、到達不能、別解、壁横断、問題と解答の壁差を確認する。必要なら修正し、元に戻す・やり直すを使う。
+5. 全体を原画像と照合してチェックボックスを選び、「確認を承認して検証」。入力・格子・壁・入口出口・解答・検証方針が変わると承認は無効になります。
+6. 「作業を保存」で原本と修正を一緒に保存する。レポート JSON / HTML、構造 JSON、表示中の重ね画像 PNG も書き出せます。作業を開き直すと再承認が必要です。
+
+解答画像がなければ解答の合法性・問題解答の一致は `NOT_RUN`。元の構造 JSON を指定すれば、問題の描画から確認したモデルとの違いも検査します。`PASS` の文字だけでなく、未検査の範囲と確証水準を確認してください。
+
+## 複数の迷路をまとめて検品する
+
+1. 「複数まとめて検品」から問題画像を追加する。解答は各行の選択欄で明示的に対応づける。PDFはページを指定し、同じファイルの別ペアは「行を複製」で追加する。
+2. 読み込みを開始する。破損画像はその行だけエラーになり、他の行は続く。「一時停止」は現在の1件が終わると停止し、「未処理を読み込む」で再開する。
+3. 一覧を確認待ち・暫定の違反・エラーなどで絞り込み、「確認する」で個別の修正画面へ進む。「一覧へ戻る」「次の確認待ち」で移動しても、各件の編集と承認を保持する。
+4. エラーの行はファイルを差し替えて再試行する。入力・格子・検証方針を変更した行は再承認が必要。自動承認・一括承認はない。
+5. 「一括作業を保存」で原画像・修正・未処理項目を `.mazeproof-batch` に保存する。トップの「保存した一括作業を開く」から読み込むと全件が未処理に戻り、再認識・再承認する。保存済みのPASSを流用しない。
+6. 一覧レポートJSON/HTMLも保存できる。個別画面の「作業を保存」はその1件だけなので、全体を再開するには一括作業を保存する。
+
+1バッチ100件、原画像合計32MiB、保存ファイル128MiBまで。同じ原画像を複数行で使う場合も行ごとに数える。サーバーは最大128作業・推定保持量192MiBを上限とし、上限では新しい作業を拒否して既存の編集を残す。これは保存用の容量予算であり、プロセスRSSの厳密な制限ではない。大きな画像は件数を分ける。一括GUIの新規投入では元構造JSONを行ごとに追加する操作は未対応。MCPの `inspect_batch` は行ごとの参照JSON・格子・回転設定にも対応する。
+
+## 対応範囲と制限
+
+- 矩形の直交格子、白い通路と黒い壁、外周の入口・出口が各1つ。赤線は単一の、セル中心を通る直交経路が対象です。
+- 自動格子推定は候補です。内部の壁が少ない長い通路や余白・文字を含む画像では手動修正が必要です。写真、自由な手描き、曲線、斜めの迷路を自動復元する機能ではありません。
+- 1ファイル25 MiB、描画後2,000万画素、最大250×250セル、1セル8画素以上。原画像の壁を消さないため、読込み時の自動縮小はしません。
+- 画像デコード・認識は別プロセス。1組の認識予算30秒、各workerのRSS監視上限512 MiB。数学的コアは別途30秒の予算。RSSは短い間隔の監視であり、OSによる厳密な瞬間最大値保証ではありません。
+- PDF は最大20ページ、各行で明示したページの組だけを144dpiで描画。回転・CropBoxを記録します。**ベクター構造の抽出・描画との一致証明は未対応**です。暗号化、文書JavaScript、添付ファイルを持つ PDF は拒否します。他のアクションも実行せず、フォーム環境は初期化しません。
+- 赤線が覆った壁は観測不能として扱い、問題画像から勝手に補いません。圧縮で失われた壁を復元できる保証はありません。
+- 設定・画像・結果はブラウザとローカルサーバーのメモリに保持します。自動保存・クラウド送信・telemetry はありません。サーバー終了で失われるので、必要な作業は保存してください。作業ファイルとHTMLレポートは画像を含むため、共有範囲に注意してください。
+
+検証した品質範囲と未検証事項は [基本機能の記録](docs/WORKBENCH_VALIDATION.md)、[一括検品の記録](docs/BATCH_VALIDATION.md) を参照してください。
+
+## CLI
+
+既存の構造 JSON 検証は維持しています。コアと従来CLIだけなら Python 3.9+、外部依存なしでソースから動きます。
 
 ```sh
 python3 -m mazeproof examples/problem.json --solution examples/solution.json
-```
-
-期待結果は `PASS`、exit code 0。人間向けの要約は `--format text`、使い方は `--help` で表示する。
-
-```sh
 python3 -m mazeproof examples/multiple.json --format text
-python3 -m mazeproof examples/wall-crossing.json --format text
-python3 -m mazeproof examples/invalid.json
 ```
 
-それぞれ別解 `FAIL` / exit 1、壁横断 `FAIL` / exit 1、不正入力 `INVALID_INPUT` / exit 3。
-`--allow-multiple` は唯一解の要件だけを外す。到達性・提出された解答の合法性は引き続き検査する。
-`--solution` を省略すると問題JSON内の任意routeを検査し、routeがなければ解答検査は `NOT_RUN`。
-別解答ファイルはroute付きの完全な迷路JSONを渡し、問題側にはrouteを入れない。
+画像検査と編集用作業ファイルの生成は、アプリ用環境で実行します。CLI から人間の承認は行いません。
 
-| exit code | 意味 |
+```sh
+.venv/bin/mazeproof inspect problem.png --solution solution.jpg --save-project work.mazeproof
+.venv/bin/mazeproof inspect book.pdf --problem-page 1 --solution book.pdf --solution-page 2
+.venv/bin/mazeproof inspect problem.png --reference examples/problem.json
+```
+
+`--settings settings.json` は `{"problem":{"geometry":{"x0":24,"y0":24,"x1":312,"y1":312,"cols":4,"rows":4},"rotation":0}}` の形式です。解答側は `solution` キーで独立に指定できます。保存先の既存ファイルは上書きしません。
+
+| 終了コード | 意味 |
 | --- | --- |
-| 0 | 構造データと実行policyの範囲でPASS |
-| 1 | 確定した構造データ上の条件違反（FAIL） |
-| 2 | NEEDS_REVIEW用の予約値。画像認識が未実装の現段階では発生しない |
-| 3 | 不正入力・未対応・上限超過・内部/ファイルエラー |
+| 0 | 構造モデルの PASS |
+| 1 | 確定モデルで条件違反 |
+| 2 | 認識モデルの確認待ち |
+| 3 | 入力不正・未対応・上限・内部エラー |
 
-PASSは完成品画像や解答未提出部分の保証ではない。JSONのscopeとNOT_RUNも確認する。
-入力はローカルの通常ファイルのみ、1ファイル25 MiB以下。URL・FIFO・デバイス・ディレクトリ・ネットワーク共有形式は受け付けない。
-stdin入力、インストール用package、画像/PDF認識、UI/MCPは後続段階。[サンプル説明](examples/README.md)も参照。
+`--allow-multiple` は唯一解の要件だけを外します。到達性と提出解答の合法性は引き続き検査します。
 
-## ローカル構造コアの確認
+## AIから使う：MCPの接続
 
-Python 3.9+、実行時の外部依存なし。repo rootから実行する。
+AIに検査を頼む場合は、上で導入したMazeProofを、ローカルstdio接続に対応したAIクライアントへ登録します。ブラウザ用のURLをMCPへ貼る方式ではありません。画面用の `serve` とAI用の `mcp` は、別々のプロセスです。
 
-```sh
-python3 -m unittest discover -s tests -v
-```
+[AI接続の手順](docs/LOCAL_MCP.md)に、登録する起動コマンド・引数、画像フォルダの指定、接続確認、複数画像の頼み方、終了と結果の扱いをまとめています。登録は利用者が行います。
 
-```python
-from mazeproof import validate_structure
+AIからは画像の検査と結果の取得ができます。画像の承認や元ファイルの書換えはできません。人が見て確認する部分は画面へ引き継ぎます。AIが接続するだけで、この画面の未保存作業を読み取れるわけではありません。
 
-# JSON text/bytesのみ受付。ファイルは呼出側が明示的に読み取る。
-result = validate_structure(problem_json, solution_json, unique_required=True)
-```
+## 検証できている範囲
 
-solution_jsonを省略すると、問題JSON内の任意routeを検証する。routeがなければ解答検査はNOT_RUN。
-PASSは入力された構造とpolicyに限定され、完成画像の保証ではない。
-PNG/JPEG/PDFは現在UNSUPPORTED。UI/MCPおよびworkerの強制メモリ・時間制限は後続段階。
+| 範囲 | 状況 |
+| --- | --- |
+| 画像の投入・修正・承認・保存、一括100件・エラー復帰・再開 | 合成入力を使ったUIテストで確認 |
+| MCPからの検査・結果取得 | 公式Python SDKの実接続で確認 |
+| AIが結果を読んで設定を直し、再検査して人へ引き継ぐこと | 合成3件の限定的な実利用を確認。任意のAIクライアントや自由対話全般の保証ではない |
+| 起動ファイル・別フォルダからの起動・新規環境への導入 | [導入整備の検証記録](docs/INSTALLATION_VALIDATION.md)を参照 |
+| 実商品の画像認識精度、検品時間短縮・見落とし削減 | **未計測** |
 
-[構造コアADR](docs/adr/0001-structure-core.md)、[入力schema](schemas/maze.schema.json)、[結果schema](schemas/result.schema.json)、[合成fixtureの由来](tests/fixtures/PROVENANCE.md)を参照。
-[ローカル検証記録](docs/CORE_VALIDATION.md)に実行コマンド・結果・制約を記載。
+[一括検品の記録](docs/BATCH_VALIDATION.md)・[レビュー修正の記録](docs/REVIEW_FIX_VALIDATION.md)は実装時点の検証です。最新コミットのCIは上のバッジとGitHubのChecksで確認してください。[リポジトリの状態](docs/REPOSITORY_STATUS.md)と[変更履歴](CHANGELOG.md)も参照できます。
 
-## CI と貢献前の確認
-
-push と pull request ごとに、GitHub Actions が Python 3.9 / 3.13 で検査する。
-独立 oracle・故障注入・golden・CLI回帰を含む20テスト、JSON Schemaと13コア/7 CLI結果シナリオ、5サンプル、Python構文、内部Markdownリンク、変更の空白を確認する。
-CI用の依存は製品の実行時依存ではない。同じ検査をローカルで再現するには repo root で次を実行する。
+## 開発と検証
 
 ```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements-ci.txt
+.venv/bin/python -m pip install -e . -r requirements-ci.txt -r requirements-dev.txt
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python tests/check_schemas.py
 .venv/bin/python tests/check_repository.py
+.venv/bin/python -m ruff check mazeproof tests scripts
+npm ci --ignore-scripts
+npm run check
+.venv/bin/python -m playwright install chromium
+.venv/bin/python scripts/e2e.py
+.venv/bin/python scripts/batch_e2e.py
+.venv/bin/python -m build --no-isolation
 git diff --check
 ```
 
-CIは対応した構造データの回帰検査であり、画像認識品質やworkerの強制リソース制限を保証するものではない。
-[CIの範囲と設定](docs/CI.md)を参照。
+UIテストは専用のヘッドレスブラウザで実行し、画面を占有しません。スクリーンショット・合成入力・テスト結果はGit対象外の `.evidence/` に保存します。サンプルだけを作るなら `python scripts/generate_samples.py /path/to/new-folder`。
 
-## ライセンスとコーヒー
+- [設計仕様](docs/SPEC.md) / [段階計画](docs/BUILD_PLAN.md)
+- [構造コアADR](docs/adr/0001-structure-core.md) / [ローカルアプリADR](docs/adr/0002-local-workbench.md)
+- [入力schema](schemas/maze.schema.json) / [結果schema](schemas/result.schema.json)
+- [独立検証方針](docs/VALIDATION.md) / [合成fixtureの由来](tests/fixtures/PROVENANCE.md)
+- [依存notice](docs/DEPENDENCIES.md) / [CI](docs/CI.md)
 
-MazeProof のコード・文書・独立した合成fixtureは [MIT License](LICENSE) で利用できる。
-役に立ったら、[コーヒーを奢ってね ☕](https://ko-fi.com/yo4e)。支援は任意です。
+MazeMa の非公開商品・私的画像は公開fixtureに使いません。アプリ・文書・独立合成fixtureは [MIT License](LICENSE)。支援は任意です：[コーヒーを奢ってね ☕](https://ko-fi.com/yo4e)。

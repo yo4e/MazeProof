@@ -1,16 +1,18 @@
-# CI の範囲と再現
+# CI の範囲
 
-GitHub Actions の [workflow](../.github/workflows/ci.yml) は全branchへのpushとpull_request（draftを含む）で実行する。mainへの反映は別のmerge判断であり、CIの成功だけで自動mergeしない。
+`push` と `pull_request` で Python 3.12 / 3.13 の検証を実行する設定。実行権限は `contents: read` のみ。checkout/setup-python actionはcommit SHA固定。
 
-Ubuntu上のPython 3.9 / 3.13で以下を独立に確認する。最低対応版と新しい版の差を確認するためのmatrixで、すべてのOS・Python版の互換性保証ではない。
+- 独立oracle、全列挙、故障注入を含む構造コアと従来JSON CLI
+- 画像/PDFのdecode・認識・承認・取消・保存復元・構造参照との比較
+- workerの時間/RSS上限、MCP stdio handshake、allowed-root逸脱とsymlink拒否
+- loopback HTTPのHost/Origin/token検査、競合、エラー復帰
+- 起動ファイルのパス移植性、ブラウザ起動の明示指定と失敗時の復帰
+- wheel/source archiveの生成と新規仮想環境への導入、ソース外からの一括入口・画像処理・保存復元
+- 結果schema、サンプル、Python構文・内部リンク、Ruff、JavaScript構文、Prettier
+- 別jobで専用headless Chromiumを使った単一・一括UI一連操作（100件、停止・保存再開、承認取消、エラー復帰）
+- レビュー回帰UI（未同期undo、遅延・失敗する保存、受付後の取消、受領確認の応答欠落）
+- 分離したQA環境の公式MCP Python SDKから実stdioサーバーへ接続する一括検品試験
 
-1. `python -m unittest discover -s tests -v`：20テスト（7 CLI回帰を含む）、独立DFS oracleの3,840ケース、62,500セル、故障注入、golden。
-2. `python tests/check_schemas.py`：Draft 2020-12の両schema、13コア/7 CLI結果シナリオ、5サンプル。
-3. `python tests/check_repository.py`：Python構文とrepo内Markdownのローカルファイルリンク。外部URLや見出しanchorの疎通は対象外。
-4. `git diff --check HEAD^ HEAD`：checkoutされたcommitの直前との差分の空白。PR実行ではGitHubのtest merge commitを検査する。
+ローカル手順は[README](../README.md)参照。UI証拠は`.evidence/`へ保存し、リポジトリやCI artifactへ自動公開しない。製品データはテストに使わない。
 
-[requirements-ci.txt](../requirements-ci.txt)でQA依存と推移依存を固定する。製品の構造コアは標準ライブラリのみで動き、schema validatorは製品依存に追加しない。ローカル実行手順は [README](../README.md) に記載。
-
-公式checkout/setup-python Actionsを確認済みのcommit SHAへ固定する。jobは5分上限、permissionsはcontents:read、checkout後の認証情報は保持しない。同じevent/refの古い実行だけを取消し、pushとPRの確認を互いに潰さない。成果物公開・release・deploy・自動mergeのstepはない。branch protectionなどの設定変更は行わない。
-
-このCIは既存の構造検査を再現するもの。未実装の画像/PDF認識、human confirmation、UI/MCP、worker強制メモリ上限は検証しない。成功はそれらの品質保証や完成品画像のPASSを意味しない。
+これは設定された検査範囲の説明。実行結果は[GitHub Actions](https://github.com/yo4e/MazeProof/actions/workflows/ci.yml)またはPRのChecksで、対象のコミットSHAとともに確認する。`success` / `failure` / 未実行・実行中を分け、以前のmainの成功を新しいHEADの成功として扱わない。ブランチと試用版タグの位置付けは[リポジトリの状態](REPOSITORY_STATUS.md)を参照。Windows、全ブラウザ、任意画像に対する品質保証ではない。

@@ -1,0 +1,2 @@
+# Optional isolated QA environment only; not a MazeProof runtime dependency.
+mcp==2.3.0
