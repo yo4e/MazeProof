@@ -6,7 +6,7 @@ import sys
 
 from . import core
 from .cli import EXIT_CODES, InputError, Parser, read_file
-from .workspace import Workspace
+from .workspace import Workspace, project_json
 
 
 def inspect_main(argv=None):
@@ -61,10 +61,10 @@ def inspect_main(argv=None):
         workspace.unique_required = unique_required
         result = workspace.evaluate()
         if args.save_project:
+            # Validate the complete saved document before creating a file.
+            text = project_json(workspace.export())
             with open(args.save_project, "x", encoding="utf-8") as stream:
-                json.dump(
-                    workspace.export(), stream, ensure_ascii=True, allow_nan=False
-                )
+                stream.write(text)
     except (InputError, core.Rejected) as error:
         result = core.error_result(
             error.status,

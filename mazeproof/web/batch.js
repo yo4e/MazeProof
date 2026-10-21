@@ -1,9 +1,9 @@
 // Batch navigation owns the queue; the server owns every verification/approval.
 // Saved reports are never trusted as approval when a batch is reopened.
+import { MAX_BUNDLE_BYTES, projectBlob } from "/files.js";
 const $ = (id) => document.getElementById(id);
 const MAX_ITEMS = 100;
 const MAX_SOURCE_BYTES = 32 * 1024 * 1024;
-const MAX_BUNDLE_BYTES = 128 * 1024 * 1024;
 const VERSION = "mazeproof.batch/1";
 const node = (tag, text, className) => {
   const element = document.createElement(tag);
@@ -616,6 +616,9 @@ export function createBatchUI(deps) {
           });
           project = exported.project;
         }
+        // Each saved row must also fit its own restore request, including rows
+        // loaded from an older bundle that have not been reprocessed yet.
+        if (project) projectBlob(project);
         items.push({
           id: row.key,
           ...(project

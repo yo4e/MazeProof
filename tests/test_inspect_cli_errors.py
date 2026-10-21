@@ -98,6 +98,7 @@ class InspectCliErrorTests(unittest.TestCase):
                     workspace.return_value.evaluate.return_value = {
                         "overallStatus": "NEEDS_REVIEW"
                     }
+                    workspace.return_value.export.return_value = {}
                     response = self.invoke(
                         ["problem.png", "--allow-multiple", "--save-project", str(target)]
                     )

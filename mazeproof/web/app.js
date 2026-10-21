@@ -1,4 +1,9 @@
 import { createBatchUI } from "/batch.js";
+import {
+  MAX_PROJECT_BYTES,
+  PROJECT_SIZE_MESSAGE,
+  projectBlob,
+} from "/files.js";
 
 const $ = (id) => document.getElementById(id);
 const clone = (value) => structuredClone(value);
@@ -32,6 +37,7 @@ const labels = {
   renderedAgreement: "構造JSONとの一致",
 };
 const errors = {
+  PROJECT_SIZE_LIMIT: PROJECT_SIZE_MESSAGE,
   LOCAL_SESSION_REQUIRED: "起動時に表示された専用URLから開き直してください。",
   BUSY: "処理中です。少し待って、もう一度実行してください。",
   UNRESOLVED_OBSERVATIONS: "橙色の境界と赤線の確認を完了してください。",
@@ -270,8 +276,10 @@ $("project-file").onchange = async () => {
   try {
     const file = $("project-file").files[0];
     if (!file) return;
-    if (file.size > 72 * 1024 * 1024)
-      throw new Error("作業ファイルが大きすぎます。");
+    if (file.size > MAX_PROJECT_BYTES)
+      throw new Error(
+        "作業ファイルは128MiB以下にしてください。現在の作業は残っています。",
+      );
     if (await importWork("restore", { project: JSON.parse(await file.text()) }))
       message("作業を復元しました。承認は再度行ってください。");
   } catch (error) {
@@ -832,10 +840,14 @@ async function exportProject() {
   });
 }
 $("save-project").onclick = async () => {
-  const project = await exportProject();
-  if (project) {
-    download("mazeproof-work.mazeproof", project);
-    unsaved = false;
+  try {
+    const project = await exportProject();
+    if (project) {
+      download("mazeproof-work.mazeproof", projectBlob(project));
+      unsaved = false;
+    }
+  } catch (error) {
+    fail(error);
   }
 };
 $("save-report").onclick = async () => {

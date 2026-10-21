@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from . import core
-from .workspace import Workspace, canonical
+from .workspace import MAX_PROJECT_REQUEST_BYTES, Workspace, canonical
 
 MAX_BODY = 72 * 1024 * 1024
 MAX_WORKSPACES = 128
@@ -32,6 +32,7 @@ STATIC = {
     "/help.css": ("help.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/batch.js": ("batch.js", "text/javascript; charset=utf-8"),
+    "/files.js": ("files.js", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
 }
 
@@ -256,7 +257,12 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             length = -1
         control = self.path in IMPORT_CONTROLS
-        if not 0 <= length <= (1024 if control else MAX_BODY):
+        limit = MAX_BODY
+        if control:
+            limit = 1024
+        elif self.path in ("/api/restore", "/api/batch-item"):
+            limit = MAX_PROJECT_REQUEST_BYTES
+        if not 0 <= length <= limit:
             self.send(413, {"error": "REQUEST_SIZE_LIMIT"})
             return
         # Cancellation/receipt are bounded metadata operations. They must remain
