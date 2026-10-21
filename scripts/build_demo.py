@@ -76,7 +76,7 @@ def build():
     (site / 'samples.js').write_text('export const samples = ' + json.dumps(samples, ensure_ascii=False, sort_keys=True) + ';\n', encoding='utf-8')
     provenance = {
         'notice': 'Original MIT synthetic samples. Fixed instructional states, not image-recognition measurements or human approvals.',
-        'coreVersion': '0.2.0', 'checks': expected,
+        'coreVersion': '0.2.1', 'checks': expected,
         'modelHashes': {key: hashlib.sha256(json.dumps(value['before']['problem'], sort_keys=True).encode()).hexdigest() for key, value in samples.items()},
     }
     (site / 'provenance.json').write_text(json.dumps(provenance, indent=2) + '\n', encoding='utf-8')

@@ -310,7 +310,7 @@ class MCP:
                     if version in ("2025-06-18", "2024-11-05")
                     else "2025-06-18",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "mazeproof", "version": "0.2.0"},
+                    "serverInfo": {"name": "mazeproof", "version": "0.2.1"},
                 }
             elif method == "ping":
                 result = {}

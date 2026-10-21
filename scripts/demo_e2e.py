@@ -116,12 +116,12 @@ def exercise(url, output):
         links = page.locator('a[href^="https://"]').evaluate_all('(links) => [...new Set(links.map(a => a.href))]')
         expected = {
             'https://github.com/yo4e/MazeProof',
-            'https://github.com/yo4e/MazeProof/releases/tag/v0.2.0',
-            'https://github.com/yo4e/MazeProof/blob/v0.2.0/docs/LOCAL_MCP.md',
+            'https://github.com/yo4e/MazeProof/releases/tag/v0.2.1',
+            'https://github.com/yo4e/MazeProof/blob/v0.2.1/docs/LOCAL_MCP.md',
         }
         assert set(links) == expected
         expect(page.locator('.next-actions a.primary')).to_have_attribute(
-            'href', 'https://github.com/yo4e/MazeProof/releases/tag/v0.2.0'
+            'href', 'https://github.com/yo4e/MazeProof/releases/tag/v0.2.1'
         )
         if url.startswith('https:'):
             for link in links:

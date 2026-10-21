@@ -2,7 +2,7 @@
 
 ## 現在の公開状況（2026-10-21）
 
-画像・一括検品をPR #5でmainへ統合し、[v0.2.0](https://github.com/yo4e/MazeProof/releases/tag/v0.2.0)を通常リリース・Latestとして公開済み。ZIP導入セット、wheel、ソース配布物、チェックサムをReleaseに添付した。操作体験デモはPR #6で統合し、[GitHub Pages](https://yo4e.github.io/MazeProof/)で公開している。現在の導入・更新方法は[README](../README.md)、タグと整理済みブランチは[リポジトリの状態](REPOSITORY_STATUS.md)を参照。
+画像・一括検品をPR #5でmainへ統合したv0.2.0に続き、保存・復元、CLIの異常終了、重複JSONキー読込みを修正した [v0.2.1](https://github.com/yo4e/MazeProof/releases/tag/v0.2.1) を配布する。ZIP導入セット、wheel、ソース配布物、チェックサムの4点を用意し、旧版のタグ・配布物は保持する。操作体験デモはPR #6で統合し、[GitHub Pages](https://yo4e.github.io/MazeProof/)で公開している。現在の導入・更新方法は[README](../README.md)、タグと整理済みブランチは[リポジトリの状態](REPOSITORY_STATUS.md)を参照。
 
 以下の計画と実装状況は、各日付時点の記録として残す。通常リリースへの切替後も、PDFベクターとの独立照合、任意画像の認識精度、利用者の時短効果などを確認済みとするものではない。
 

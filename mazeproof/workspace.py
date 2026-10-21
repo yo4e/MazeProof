@@ -226,7 +226,7 @@ class Workspace:
             self.approved_digest = self.digest()
         confirmed = self.approved_digest == self.digest()
         assurance = "human_confirmed" if confirmed else "recognized_unconfirmed"
-        result["engineVersion"] = "0.2.0"
+        result["engineVersion"] = "0.2.1"
         result["inputDigests"] = {
             role: obs["digest"] for role, obs in self.observations.items()
         }
