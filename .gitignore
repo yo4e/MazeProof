@@ -7,6 +7,7 @@ dist/
 .evidence/
 .playwright/
 node_modules/
+_site/
 
 # Local inspection work and downloaded reports may contain source images.
 *.mazeproof
