@@ -11,12 +11,23 @@ from .core import Rejected
 from .worker import run
 
 VERSION = "mazeproof.project/1"
+# A saved project must fit both the file reader and its HTTP request envelope.
+# Keep image imports at their existing lower budget; only restoration uses this.
+MAX_PROJECT_BYTES = 128 * 1024 * 1024
+MAX_PROJECT_REQUEST_BYTES = MAX_PROJECT_BYTES + 1024
 
 
 def canonical(value):
     return json.dumps(
         value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False
     )
+
+
+def project_json(project):
+    text = canonical(project)
+    if len(text.encode("utf-8")) > MAX_PROJECT_BYTES:
+        raise Rejected("RESOURCE_LIMIT", "PROJECT_SIZE_LIMIT")
+    return text
 
 
 def fingerprint(value):
@@ -215,7 +226,7 @@ class Workspace:
             self.approved_digest = self.digest()
         confirmed = self.approved_digest == self.digest()
         assurance = "human_confirmed" if confirmed else "recognized_unconfirmed"
-        result["engineVersion"] = "0.2.0"
+        result["engineVersion"] = "0.2.1"
         result["inputDigests"] = {
             role: obs["digest"] for role, obs in self.observations.items()
         }
@@ -326,7 +337,7 @@ class Workspace:
         return result
 
     def export(self):
-        return {
+        project = {
             "schemaVersion": VERSION,
             "sources": self.sources,
             "reference": self.reference,
@@ -335,9 +346,12 @@ class Workspace:
             "result": self.evaluate(),
             "notice": "Reopening always requires fresh human confirmation. Originals are embedded.",
         }
+        project_json(project)
+        return project
 
     @classmethod
     def restore(cls, project):
+        project_json(project)
         core._keys(
             project,
             (

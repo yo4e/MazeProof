@@ -68,6 +68,18 @@ jobs:
       - run: python scripts/e2e.py
       - run: python scripts/batch_e2e.py
       - run: python scripts/review_e2e.py
+      - name: File save, restore, and strict JSON browser regressions
+        run: python scripts/file_e2e.py
+      - name: Keep file workflow verification evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: file-workflows
+          path: |
+            .evidence/file-contracts/result.json
+            .evidence/file-contracts/duplicate-preserved.png
+            .evidence/file-contracts/large-restored.png
+          retention-days: 14
       - name: Official MCP client integration
         run: |
           python -m venv .evidence/mcp-client-venv

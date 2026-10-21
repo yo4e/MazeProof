@@ -1,9 +1,10 @@
 {
   "name": "mazeproof-dev",
   "private": true,
+  "type": "module",
   "scripts": {
     "format": "prettier --write mazeproof/web demo",
-    "check": "prettier --check mazeproof/web demo && node --check mazeproof/web/app.js && node --check mazeproof/web/batch.js && node --check demo/app.js"
+    "check": "prettier --check mazeproof/web demo && node --check mazeproof/web/app.js && node --check mazeproof/web/batch.js && node --check demo/app.js && node scripts/check_json_files.mjs"
   },
   "devDependencies": {"prettier": "3.6.2"}
 }

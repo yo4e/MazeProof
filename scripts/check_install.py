@@ -35,7 +35,7 @@ def main():
             parts = urlsplit(line.removeprefix("MazeProof: "))
             assert parts.path == "/batch" and parts.fragment
             origin = parts.scheme + "://" + parts.netloc
-            assets = ("/", "/batch", "/app.js", "/batch.js", "/style.css", "/help", "/help.css")
+            assets = ("/", "/batch", "/app.js", "/batch.js", "/files.js", "/style.css", "/help", "/help.css")
             for path in assets:
                 with urlopen(origin + path, timeout=10) as response:
                     assert response.status == 200 and len(response.read()) > 100
