@@ -1,18 +1,18 @@
 """Image/project CLI, sharing the same review state as the browser."""
 
-import argparse
 import base64
 import json
 import sys
 
 from . import core
-from .cli import EXIT_CODES, InputError, read_file
+from .cli import EXIT_CODES, InputError, Parser, read_file
 from .workspace import Workspace
 
 
 def inspect_main(argv=None):
-    parser = argparse.ArgumentParser(
-        description="Inspect local image/PDF. Output remains NEEDS_REVIEW until a human reviews it in the UI."
+    parser = Parser(
+        prog="mazeproof inspect",
+        description="Inspect local image/PDF. Output remains NEEDS_REVIEW until a human reviews it in the UI.",
     )
     parser.add_argument("problem")
     parser.add_argument("--solution")
@@ -31,8 +31,10 @@ def inspect_main(argv=None):
         "--save-project",
         help="Write an editable project to a NEW file; never overwrites",
     )
-    args = parser.parse_args(argv)
+    unique_required = True
     try:
+        args = parser.parse_args(argv)
+        unique_required = not args.allow_multiple
         settings = core._decode(read_file(args.settings))[0] if args.settings else {}
         core._keys(settings, (), ("problem", "solution"))
         sources = {}
@@ -56,7 +58,7 @@ def inspect_main(argv=None):
             core._decode(read_file(args.reference))[0] if args.reference else None
         )
         workspace = Workspace(sources, reference)
-        workspace.unique_required = not args.allow_multiple
+        workspace.unique_required = unique_required
         result = workspace.evaluate()
         if args.save_project:
             with open(args.save_project, "x", encoding="utf-8") as stream:
@@ -67,12 +69,21 @@ def inspect_main(argv=None):
         result = core.error_result(
             error.status,
             getattr(error, "code", getattr(error, "reason", "INPUT_REJECTED")),
+            unique_required=unique_required,
         )
     except FileExistsError:
-        result = core.error_result("INVALID_INPUT", "OUTPUT_ALREADY_EXISTS")
+        result = core.error_result(
+            "INVALID_INPUT", "OUTPUT_ALREADY_EXISTS", unique_required=unique_required
+        )
     except Exception:
-        result = core.error_result("ERROR", "INSPECT_FAILED")
-    sys.stdout.write(
-        json.dumps(result, indent=2, ensure_ascii=True, allow_nan=False) + "\n"
-    )
+        result = core.error_result(
+            "ERROR", "INSPECT_FAILED", unique_required=unique_required
+        )
+    try:
+        sys.stdout.write(
+            json.dumps(result, indent=2, ensure_ascii=True, allow_nan=False) + "\n"
+        )
+    except (BrokenPipeError, OSError):
+        # A closed output stream cannot carry a result; avoid leaking a traceback.
+        return 3
     return EXIT_CODES[result["overallStatus"]]
