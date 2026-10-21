@@ -1,6 +1,6 @@
 # MazeProof 操作体験デモ
 
-公開先は [https://yo4e.github.io/MazeProof/](https://yo4e.github.io/MazeProof/)。ローカル版の導入前に、どこを見比べ、何を人が確認するのかを体験するための静的サイトです。本体の試用版 [v0.2.0](https://github.com/yo4e/MazeProof/releases/tag/v0.2.0) と区別します。
+公開先は [https://yo4e.github.io/MazeProof/](https://yo4e.github.io/MazeProof/)。ローカル版の導入前に、どこを見比べ、何を人が確認するのかを体験するための静的サイトです。本体の公開版 [v0.2.0](https://github.com/yo4e/MazeProof/releases/tag/v0.2.0) と区別します。導入ボタンは、ZIP・wheel・ソース配布物と手順を掲載したReleaseへ案内します。通常リリースへの切替によって、デモの検査範囲や画像認識の保証が広がるわけではありません。
 
 ## できること
 
