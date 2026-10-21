@@ -23,6 +23,27 @@ class Parser(argparse.ArgumentParser):
         raise InputError("INVALID_INPUT", "CLI_ARGUMENTS")
 
 
+def write_output(text):
+    """Flush while errors can still be handled, including redirected stdout.
+
+    A buffered write can succeed and fail only at interpreter shutdown (exit
+    120). After a failure redirect the descriptor, so shutdown cannot retry the
+    failed write. In-memory streams used by callers need no descriptor cleanup.
+    """
+    try:
+        sys.stdout.write(text)
+        sys.stdout.flush()
+        return True
+    except (BrokenPipeError, OSError):
+        try:
+            descriptor = sys.stdout.fileno()
+            with open(os.devnull, "w") as sink:
+                os.dup2(sink.fileno(), descriptor)
+        except (AttributeError, OSError, ValueError):
+            pass
+        return False
+
+
 def read_file(path):
     """Bounded read from an opened regular file; FIFO/device/URL not accepted."""
     if "://" in path or path.startswith(("//", "\\\\")):
@@ -88,12 +109,8 @@ def main(argv=None):
     except Exception:
         result = core.error_result("ERROR", "CLI_INTERNAL_ERROR",
                                    unique_required=arguments is None or not arguments.allow_multiple)
-    try:
-        if arguments is not None and arguments.format == "text":
-            sys.stdout.write(_render_text(result))
-        else:
-            sys.stdout.write(json.dumps(result, ensure_ascii=True, allow_nan=False, indent=2) + "\n")
-    except (BrokenPipeError, OSError):
-        # A closed/unwritable output stream cannot carry a result. No traceback.
+    text = (_render_text(result) if arguments is not None and arguments.format == "text"
+            else json.dumps(result, ensure_ascii=True, allow_nan=False, indent=2) + "\n")
+    if not write_output(text):
         return 3
     return EXIT_CODES[result["overallStatus"]]

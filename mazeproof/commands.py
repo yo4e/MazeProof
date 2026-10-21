@@ -2,10 +2,9 @@
 
 import base64
 import json
-import sys
 
 from . import core
-from .cli import EXIT_CODES, InputError, Parser, read_file
+from .cli import EXIT_CODES, InputError, Parser, read_file, write_output
 from .workspace import Workspace, project_json
 
 
@@ -79,11 +78,8 @@ def inspect_main(argv=None):
         result = core.error_result(
             "ERROR", "INSPECT_FAILED", unique_required=unique_required
         )
-    try:
-        sys.stdout.write(
-            json.dumps(result, indent=2, ensure_ascii=True, allow_nan=False) + "\n"
-        )
-    except (BrokenPipeError, OSError):
-        # A closed output stream cannot carry a result; avoid leaking a traceback.
+    if not write_output(
+        json.dumps(result, indent=2, ensure_ascii=True, allow_nan=False) + "\n"
+    ):
         return 3
     return EXIT_CODES[result["overallStatus"]]

@@ -3,7 +3,10 @@
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -122,8 +125,35 @@ class InspectCliErrorTests(unittest.TestCase):
                     "mazeproof.commands.read_file",
                     side_effect=InputError("INVALID_INPUT", "FILE_READ_ERROR"),
                 ):
-                    with patch("mazeproof.commands.sys.stdout.write", side_effect=error):
+                    stream = io.StringIO()
+                    with contextlib.redirect_stdout(stream), patch.object(stream, "write", side_effect=error):
                         self.assertEqual(inspect_main(["missing.png"]), 3)
+
+    @unittest.skipIf(os.name == "nt", "POSIX pipe descriptors")
+    def test_real_closed_stdout_pipe_exits_three_without_shutdown_error(self):
+        for args in (["inspect", "missing.png"], ["missing.json"], ["missing.json", "--format", "text"]):
+            with self.subTest(args=args):
+                read, write = os.pipe()
+                os.close(read)
+                try:
+                    process = subprocess.run(
+                        [sys.executable, "-m", "mazeproof", *args],
+                        stdout=write, stderr=subprocess.PIPE, timeout=10,
+                    )
+                finally:
+                    os.close(write)
+                self.assertEqual(process.returncode, 3)
+                self.assertEqual(process.stderr, b"")
+
+    @unittest.skipUnless(Path("/dev/full").exists(), "Linux full device")
+    def test_real_unwritable_stdout_exits_three(self):
+        with open("/dev/full", "wb") as output:
+            process = subprocess.run(
+                [sys.executable, "-m", "mazeproof", "inspect", "missing.png"],
+                stdout=output, stderr=subprocess.PIPE, timeout=10,
+            )
+        self.assertEqual(process.returncode, 3)
+        self.assertEqual(process.stderr, b"")
 
     def test_successful_unconfirmed_inspection_still_returns_two(self):
         with patch("mazeproof.commands.read_file", return_value=b"synthetic"):
