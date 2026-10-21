@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import threading
+import time
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -19,6 +20,31 @@ def capture(page, path):
     # Full-page captures otherwise place sticky UI at the current scroll offset.
     page.evaluate('window.scrollTo(0, 0)')
     page.screenshot(path=str(path), full_page=True)
+
+
+def verify_links(page, links, output):
+    """Keep HTTP evidence; retry only rate limits and temporary server errors."""
+    responses = []
+    for link in links:
+        for attempt in range(3):
+            response = page.request.get(link, timeout=30000)
+            responses.append({'url': link, 'status': response.status, 'attempt': attempt + 1})
+            (output / 'link-responses.json').write_text(json.dumps(responses, indent=2) + '\n')
+            print(f'Public link HTTP {response.status}: {link}', flush=True)
+            if response.ok:
+                break
+            if response.status != 429 and not 500 <= response.status < 600:
+                raise AssertionError(f'HTTP {response.status}: {link}')
+            if attempt == 2:
+                raise AssertionError(f'HTTP {response.status} after 3 attempts: {link}')
+            delay = 10 * (attempt + 1)
+            retry_after = response.headers.get('retry-after', '')
+            if retry_after.isdecimal():
+                # A longer cooldown should fail clearly, not retry too early.
+                if int(retry_after) > 30:
+                    raise AssertionError(f'HTTP {response.status}; Retry-After {retry_after}s: {link}')
+                delay = max(delay, int(retry_after))
+            time.sleep(delay)
 
 
 def exercise(url, output):
@@ -123,9 +149,6 @@ def exercise(url, output):
         expect(page.locator('.next-actions a.primary')).to_have_attribute(
             'href', 'https://github.com/yo4e/MazeProof/releases/tag/v0.2.1'
         )
-        if url.startswith('https:'):
-            for link in links:
-                assert page.request.get(link).ok, link
         assert not errors, errors
         assert all(method == 'GET' for method, _ in requests)
         assert not any('/api/' in target or '127.0.0.1' in target and url.startswith('https:') for _, target in requests)
@@ -141,6 +164,10 @@ def exercise(url, output):
         failure.reload(wait_until='networkidle')
         expect(failure.locator('body')).to_have_attribute('data-ready', 'true')
         expect(failure.locator('#advance')).to_be_enabled()
+        # Complete the UI scenarios before testing third-party link availability.
+        # A link failure remains a failing job, with the HTTP status in artifacts.
+        if url.startswith('https:'):
+            verify_links(page, links, output)
         browser.close()
     (output / 'result.json').write_text(json.dumps({'url': url, 'success': True, 'cases': 3, 'widths': [320, 375, 768, 1024, 1440], 'links': links, 'consoleErrors': errors, 'noUploadsOrApiRequests': True, 'resetReloadAndFailureRecovery': True}, ensure_ascii=False, indent=2) + '\n')
     print('Static demo: three cases, correction/reset, keyboard, mobile, links, read-only requests and failure recovery passed.')
