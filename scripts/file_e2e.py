@@ -65,6 +65,7 @@ async def main():
             await page.goto(server.origin + "/#" + server.token)
 
             async def file(selector, text, name="fixture.json"):
+                await page.locator("#message").evaluate("e=>{e.textContent='';e.hidden=true;}")
                 await page.locator(selector).set_input_files({"name": name, "mimeType": "application/json", "buffer": text.encode()})
 
             async def warning():
@@ -147,6 +148,19 @@ async def main():
             await page.locator("#import-submit").click()
             await expect(page.locator("#workbench")).to_be_visible(timeout=180000)
             await expect(page.locator("#busy")).to_be_hidden(timeout=180000)
+            # This deliberately dense snake is outside reliable auto-grid
+            # estimation. Set both grids using the supported user controls.
+            for role in ("problem", "solution"):
+                await page.locator("#tab-" + role).click()
+                if not await page.locator("#grid-details").evaluate("e=>e.open"):
+                    await page.locator("#grid-details summary").click()
+                for key, value in {"cols": 250, "rows": 250, "x0": 8, "y0": 8, "x1": 2508, "y1": 2508}.items():
+                    await page.locator("#" + key).fill(str(value))
+                async with page.expect_response("**/api/import-claim", timeout=180000) as claimed:
+                    await page.locator("#reanalyze").click()
+                    await page.locator("#dialog-yes").click()
+                assert (await claimed.value).status == 200
+                await expect(page.locator("#busy")).to_be_hidden(timeout=180000)
             await expect(page.locator("#cols")).to_have_value("250")
             await expect(page.locator("#rows")).to_have_value("250")
             large = folder / "large.mazeproof"
@@ -155,6 +169,8 @@ async def main():
             old = next(iter(server.workspaces.values()))
             digest = old.digest()
             sizes = {"sourceBytes": [p.stat().st_size for p in (large_problem, large_solution)], "savedBytes": large.stat().st_size, "limit": MAX_PROJECT_BYTES, "routeLength": len(old.edits["solution"]["model"]["route"]), "unknowns": len(old.observations["solution"]["unknowns"])}
+            assert sizes["routeLength"] == 62500 and sizes["unknowns"] > 60000
+            await page.locator("#message").evaluate("e=>{e.textContent='';e.hidden=true;}")
             await page.locator("#project-file").set_input_files(str(large))
             await expect(page.locator("#message")).to_contain_text("復元しました", timeout=180000)
             await expect(page.locator("#busy")).to_be_hidden()
