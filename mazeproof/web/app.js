@@ -3,6 +3,7 @@ import {
   MAX_PROJECT_BYTES,
   PROJECT_SIZE_MESSAGE,
   projectBlob,
+  readJSONFile,
 } from "/files.js";
 
 const $ = (id) => document.getElementById(id);
@@ -261,11 +262,17 @@ $("import-form").onsubmit = async (event) => {
         sources[role].page = Number($(role + "-page").value);
     }
     const reference = $("reference-file").files[0];
-    if (reference && reference.size > 25 * 1024 * 1024)
-      throw new Error(errors.BYTE_LIMIT);
     await importWork("import", {
       sources,
-      ...(reference ? { reference: JSON.parse(await reference.text()) } : {}),
+      ...(reference
+        ? {
+            reference: await readJSONFile(
+              reference,
+              25 * 1024 * 1024,
+              errors.BYTE_LIMIT,
+            ),
+          }
+        : {}),
     });
   } catch (error) {
     fail(error);
@@ -276,11 +283,12 @@ $("project-file").onchange = async () => {
   try {
     const file = $("project-file").files[0];
     if (!file) return;
-    if (file.size > MAX_PROJECT_BYTES)
-      throw new Error(
-        "作業ファイルは128MiB以下にしてください。現在の作業は残っています。",
-      );
-    if (await importWork("restore", { project: JSON.parse(await file.text()) }))
+    const project = await readJSONFile(
+      file,
+      MAX_PROJECT_BYTES,
+      "作業ファイルは128MiB以下にしてください。現在の作業は残っています。",
+    );
+    if (await importWork("restore", { project }))
       message("作業を復元しました。承認は再度行ってください。");
   } catch (error) {
     fail(error);

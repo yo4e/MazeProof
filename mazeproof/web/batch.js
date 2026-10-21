@@ -1,6 +1,6 @@
 // Batch navigation owns the queue; the server owns every verification/approval.
 // Saved reports are never trusted as approval when a batch is reopened.
-import { MAX_BUNDLE_BYTES, projectBlob } from "/files.js";
+import { MAX_BUNDLE_BYTES, projectBlob, readJSONFile } from "/files.js";
 const $ = (id) => document.getElementById(id);
 const MAX_ITEMS = 100;
 const MAX_SOURCE_BYTES = 32 * 1024 * 1024;
@@ -701,9 +701,11 @@ export function createBatchUI(deps) {
     const file = $("batch-project-file").files[0];
     $("batch-project-file").value = "";
     if (!file) return;
-    if (file.size > MAX_BUNDLE_BYTES)
-      throw new Error("一括作業は128MiB以下にしてください。");
-    const saved = JSON.parse(await file.text());
+    const saved = await readJSONFile(
+      file,
+      MAX_BUNDLE_BYTES,
+      "一括作業は128MiB以下にしてください。現在の作業は残っています。",
+    );
     if (saved?.schemaVersion !== VERSION || !Array.isArray(saved.items))
       throw new Error("対応する一括作業ファイルではありません。");
     const prepared = saved.items.map((item) => {
